@@ -1,0 +1,2149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SKYBOUND — Cloud Circuit</title>
+<style>
+:root{--gold:#ffe39a;--cyan:#83efff;--ink:#071327}*{box-sizing:border-box}body{margin:0;background:#061329;color:#fff;font-family:Inter,system-ui,Segoe UI,sans-serif;overflow:hidden}
+#game{position:fixed;inset:0}canvas{display:block}
+#veil{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(120deg,rgba(4,14,36,.68),rgba(8,30,60,.2));backdrop-filter:blur(7px);z-index:5}
+.panel{width:min(960px,94vw);border:1px solid #b9eaff55;border-radius:28px;background:linear-gradient(145deg,#0c2544ee,#102c4fee 60%,#18395bee);box-shadow:0 28px 100px #0009;padding:clamp(20px,4vw,42px);position:relative;overflow:hidden}
+.panel:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 5%,#8eeeff22,transparent 35%),radial-gradient(circle at 5% 100%,#ffcf7522,transparent 38%);pointer-events:none}
+.top,.content,.actions{position:relative;z-index:2}.top{display:flex;justify-content:space-between;align-items:center;gap:15px}.brand{letter-spacing:.28em;font-size:12px;color:var(--cyan);font-weight:900}.pill{border:1px solid #bceeff55;padding:8px 13px;border-radius:99px;color:#c9eaff;font-size:11px;letter-spacing:.12em}
+h1{font-size:clamp(42px,8vw,82px);line-height:.9;margin:28px 0 12px;letter-spacing:-.065em;text-shadow:0 8px 30px #6adfff44}h1 span{color:var(--gold)}.sub{color:#bfd5e8;max-width:590px;line-height:1.6;font-size:15px}
+.content{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;margin-top:24px}.section{background:#06172c88;border:1px solid #b7e8ff22;border-radius:19px;padding:18px}.label{font-size:10px;letter-spacing:.2em;color:#8fb9d3;font-weight:900;margin-bottom:12px}.maps{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.map{border:1px solid #b7e8ff33;background:#153654aa;border-radius:14px;padding:13px;text-align:left;color:white;cursor:pointer;min-height:90px;transition:.2s}.map:hover,.map.active{border-color:var(--gold);background:#365274aa;transform:translateY(-2px)}.map b{display:block;font-size:14px}.map small{color:#b9d2e5}.map .emoji{font-size:23px;display:block;margin-bottom:6px}.animals{display:flex;gap:8px;flex-wrap:wrap}.animal{width:58px;height:58px;border:1px solid #b7e8ff33;border-radius:14px;background:#153654aa;font-size:28px;cursor:pointer}.animal.active{border:2px solid var(--gold);background:#49617b}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}.btn{border:0;border-radius:13px;padding:15px 22px;font-weight:900;letter-spacing:.1em;cursor:pointer;color:#132238;background:linear-gradient(100deg,#ffe6a5,#ffc96c);box-shadow:0 8px 25px #ffcb7033}.btn.secondary{background:#ffffff12;color:#e9f7ff;border:1px solid #b7e8ff44;box-shadow:none}.hint{font-size:11px;color:#9dbbd1;margin-top:14px}.hidden{display:none!important}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3}.hudtop{display:flex;justify-content:space-between;padding:20px;gap:10px}.hudbox{background:#07182dcc;border:1px solid #b7e8ff44;border-radius:13px;padding:10px 15px;backdrop-filter:blur(8px);font-size:12px;letter-spacing:.1em}.hudbox strong{color:var(--gold);font-size:18px;display:block;margin-top:3px}.centermsg{position:absolute;top:16%;left:50%;transform:translateX(-50%);font-weight:900;letter-spacing:.2em;text-shadow:0 3px 14px #000;font-size:13px}.controls{position:absolute;bottom:20px;left:20px;color:#e4f4ff;background:#07182dcc;padding:12px 15px;border:1px solid #b7e8ff33;border-radius:12px;font-size:11px;line-height:1.7}.mobile{position:absolute;bottom:24px;right:20px;display:flex;gap:10px;pointer-events:auto}.mobile button{width:60px;height:60px;border-radius:50%;border:1px solid #fff7;background:#0b294dcc;color:white;font-size:22px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:8;background:#0a2038ed;border:1px solid #b7e8ff66;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none}
+@media(max-width:700px){.content{grid-template-columns:1fr;gap:12px}.panel{max-height:94vh;overflow:auto}h1{margin-top:20px}.controls{font-size:9px;bottom:8px;left:8px}.hudtop{padding:9px}.hudbox{padding:8px;font-size:10px}.hudbox strong{font-size:15px}}
+
+.modeGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0 16px}
+.modeCard{min-height:112px;text-align:left;border:1px solid #b7e8ff33;border-radius:15px;padding:12px;background:linear-gradient(145deg,#173b5c,#102844);color:#fff;cursor:pointer;transition:.2s}
+.modeCard:hover,.modeCard.active{border-color:#ffe39a;transform:translateY(-2px);box-shadow:0 8px 24px #65dfff22}
+.modeCard .modeIcon{font-size:25px;display:block;margin-bottom:7px}
+.modeCard b{display:block;font-size:12px;letter-spacing:.08em}
+.modeCard small{display:block;color:#b9d2e5;font-size:10px;line-height:1.35;margin-top:5px}
+#customPanel .workshop{width:min(760px,94vw);display:grid;grid-template-columns:.9fr 1.1fr;gap:18px;padding:22px;border-radius:24px;background:linear-gradient(145deg,#102b49,#0b1d35);border:1px solid #b7e8ff66;box-shadow:0 25px 80px #000b}
+.racerPreview{min-height:280px;border-radius:20px;background:radial-gradient(circle at 50% 35%,#5ab9d955,transparent 45%),linear-gradient(160deg,#1d5275,#101e3b);display:grid;place-items:center;position:relative;overflow:hidden}
+.racerPreview:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:#8deaff22;filter:blur(20px)}
+#previewAnimal{font-size:112px;filter:drop-shadow(0 18px 16px #0008);z-index:1}
+.previewTag{position:absolute;bottom:14px;left:14px;right:14px;text-align:center;font-size:10px;letter-spacing:.2em;color:#d9f7ff}
+.workshopControls{min-width:0}
+.choiceTitle{font-size:10px;letter-spacing:.18em;color:#9fc6df;font-weight:900;margin:15px 0 8px}
+#customPanel .animals{gap:7px}
+#customPanel .animal{width:48px;height:48px;font-size:23px}
+@media(max-width:700px){.modeGrid{grid-template-columns:1fr}.modeCard{min-height:75px}#customPanel .workshop{grid-template-columns:1fr;max-height:94vh;overflow:auto}.racerPreview{min-height:155px}#previewAnimal{font-size:76px}}
+
+.exitGame{position:absolute;top:88px;right:20px;pointer-events:auto;border:1px solid #b7e8ff88;background:#07182ddd;color:#fff;border-radius:12px;padding:10px 14px;font-size:10px;font-weight:900;letter-spacing:.12em;cursor:pointer}.exitGame:hover{background:#1b5276}@media(max-width:600px){.exitGame{top:82px;right:12px;padding:9px 10px;font-size:9px}}
+
+.humanPreview{position:relative;width:92px;height:190px;z-index:1;filter:drop-shadow(0 12px 12px #0008)}
+.hp-head{position:absolute;top:8px;left:29px;width:36px;height:38px;border-radius:45%;background:#dba77e;border:2px solid #f4d2b1}
+.hp-body{position:absolute;top:49px;left:18px;width:58px;height:72px;border-radius:17px 17px 12px 12px;background:#36a9e8;border:2px solid #ffffff55}
+.hp-arm{position:absolute;top:55px;width:15px;height:65px;border-radius:12px;background:#dba77e}
+.hp-arm.left{left:4px;transform:rotate(8deg)}.hp-arm.right{right:4px;transform:rotate(-8deg)}
+.hp-leg{position:absolute;top:115px;width:20px;height:63px;border-radius:9px;background:#27364f}
+.hp-leg.left{left:23px}.hp-leg.right{right:23px}
+.hp-hat{display:none;position:absolute;z-index:2;top:0;left:24px;width:48px;height:15px;border-radius:10px 10px 3px 3px;background:#258bd1}
+.clothes{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}
+.clothing{border:1px solid #9edbff55;border-radius:9px;background:#173b5c;color:#fff;padding:8px 10px;font-size:10px;cursor:pointer}
+.clothing small{display:block;color:#b9d2e5;margin-top:4px}.clothing.active{border-color:#ffe39a;background:#28577a}.clothing.locked{opacity:.48;cursor:not-allowed}
+.xpRoad{background:#081c32;border:1px solid #9edbff44;border-radius:12px;padding:10px;margin:8px 0 14px}
+.xpTop{display:flex;justify-content:space-between;font-size:10px;color:#e7f8ff}.xpTrack{height:9px;background:#253d56;border-radius:9px;overflow:hidden;margin:8px 0}.xpTrack div{height:100%;width:0;background:linear-gradient(90deg,#4fd9ff,#ffe39a);transition:width .3s}
+.xpStops{display:flex;justify-content:space-between;font-size:9px;color:#b8d7e8}
+@media(max-width:700px){.humanPreview{transform:scale(.78)}}
+
+#launchScreen{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 38%,#17466a,#081b35 55%,#030b19);transition:opacity .45s,visibility .45s}
+#launchScreen.done{opacity:0;visibility:hidden;pointer-events:none}.launchCard{width:min(520px,90vw);text-align:center;padding:34px 28px;border:1px solid #a9eaff55;border-radius:26px;background:linear-gradient(145deg,#0b2746,#102e50);box-shadow:0 25px 90px #0009}
+.launchLogo{font-size:clamp(36px,8vw,64px);font-weight:1000;letter-spacing:-.06em;line-height:.9}.launchLogo span{color:var(--gold)}.launchSub{margin:16px;color:#b9d9ef;letter-spacing:.18em;font-size:10px;font-weight:900}
+.launchTrack{height:8px;border-radius:20px;background:#06182c;overflow:hidden}.launchTrack i{display:block;width:0;height:100%;background:linear-gradient(90deg,#59dfff,#ffe39a);animation:launchFill 1.35s ease forwards}@keyframes launchFill{to{width:100%}}
+.profileStrip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:11px 13px;border-radius:14px;background:#06172c99;border:1px solid #b7e8ff33}
+.profileStrip input{min-width:120px;flex:1;background:#07182c;color:white;border:1px solid #b7e8ff55;border-radius:9px;padding:9px 11px}.profileStat{font-size:11px;color:#c7e6f8;white-space:nowrap}.profileStat b{color:var(--gold)}.saveNote{font-size:10px;color:#91b5cf}
+#maps .map:disabled{opacity:.48;filter:saturate(.65);cursor:not-allowed;pointer-events:none}#infiniteModeToggle.active{border-color:#75e7ff;background:linear-gradient(135deg,#123b58,#174a65);box-shadow:0 0 0 2px #62dfff33 inset}#infiniteModeToggle small{display:block;margin-top:5px;color:#a9d9ed}</style></head><body>
+<div id="game"></div>
+<div id="veil"><div class="panel">
+<div class="top"><div class="brand">A HIGH-ALTITUDE ARCADE</div><div class="pill">SOLO COURSE • SAME DIFFICULTY ON EVERY MAP</div></div>
+<div id="hexResults" class="hidden content"><h1 id="hexResultTitle">VICTORY!</h1><p class="sub" id="hexResultText"></p><div class="actions"><button class="btn" id="hexReturnLobby">RETURN TO LOBBY ↗</button></div></div>
+<div class="profileStrip" id="profileStrip"><span style="font-size:22px">👤</span><input id="profileName" maxlength="18" aria-label="Racer name" placeholder="Enter racer name"><span class="profileStat">LEVEL <b id="profileLevel">1</b></span><span class="profileStat">XP <b id="profileXP">0</b></span><span class="saveNote" id="saveStatus">SAVES ON THIS DEVICE</span></div>
+<div id="mainMenu" class="content">
+<div><h1>SKY<span>BOUND</span><br>RACERS</h1><p class="sub">Choose your challenge: race the floating worlds, survive the eight-stage hex arena, or dodge sweeping energy beams.</p>
+<div class="label" style="margin-top:18px">CHOOSE YOUR GAME MODE</div>
+<div class="modeGrid" id="modeChoices">
+<button class="modeCard active" data-mode="race"><span class="modeIcon">🏁</span><b>SKY RACE</b><small>Our original floating-island obstacle course.</small></button>
+<button class="modeCard" data-mode="hex"><span class="modeIcon">⬡</span><b>HEX SURVIVAL</b><small>Five stacked layers. Tiles fall after two seconds.</small></button>
+<button class="modeCard" data-mode="laser"><span class="modeIcon">🧩</span><b>HIDE &amp; SEEK</b><small>Hide from the seeker or hunt down all the hiders!</small></button>
+</div>
+
+
+<div class="actions"><button class="btn" id="play" type="button" onclick="window.__skyStartNow()">START SKY RACE ↗</button><button class="btn secondary" id="customize">CUSTOMIZE RACER</button><button class="btn secondary" id="room">ROOM CODES</button></div>
+<p class="hint">Your profile saves on this device. Online accounts and multiplayer require a game server.</p></div>
+<div class="section"><div id="mazeSidebarDifficulty" class="hidden"><div id="mazeDifficultySidebar" class="difficultyPicker" style="margin:14px 0 4px">
+  <div class="label">HIDE & SEEK DIFFICULTY</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="modeCard active" data-difficulty="beginner" type="button">BEGINNER</button>
+    <button class="modeCard" data-difficulty="easy" type="button">EASY</button>
+    <button class="modeCard" data-difficulty="medium" type="button">MEDIUM</button>
+    <button class="modeCard" data-difficulty="difficult" type="button">DIFFICULT</button>
+    <button class="modeCard" data-difficulty="hard" type="button">HARD</button>
+  </div>
+  <div class="label" style="margin-top:14px">CHOOSE YOUR ROLE</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="modeCard active" data-role="hider" type="button">🙈 HIDER</button>
+    <button class="modeCard" data-role="seeker" type="button">🔎 SEEKER</button>
+  </div>
+</div></div><div class="label">CHOOSE YOUR WORLD COLORS</div><div class="maps" id="maps">
+<button class="map active" data-map="cloud"><span class="emoji">☁️</span><b>Cloud Kingdom</b><small>Floating sky gardens</small></button>
+<button class="map" data-map="sunset"><span class="emoji">🌅</span><b>Verdant Falls</b><small>Green islands above blue water</small></button>
+<button class="map" data-map="ice"><span class="emoji">🌋</span><b>Magma Peaks</b><small>Floating pads • jump over mounted lasers</small></button>
+<button class="map" data-map="neon"><span class="emoji">✨</span><b>Moonlit Ruins</b><small>Ancient floating stone temples</small></button></div>
+<div class="label" style="margin-top:16px">SKY RACE CHALLENGE</div>
+<button class="map" id="infiniteModeToggle" type="button" aria-pressed="false" style="width:100%;text-align:left">
+  <span class="emoji">♾️</span><b>INFINITE MODE</b>
+  <small id="infiniteHighScore">HIGH SCORE: 0 PLATFORMS</small>
+</button>
+<div class="label" id="racerLabel" style="margin-top:18px">YOUR RACER</div><p class="hint">Your customized racer is used in every solo game mode.</p></div>
+</div>
+<div id="roomMenu" class="hidden content"><div><h1>RACE <span>ROOM</span></h1><p class="sub">Private rooms will let friends race together when online play is added. For now, you can preview the room-code flow.</p><div class="actions"><button class="btn" id="makeRoom">GENERATE ROOM CODE</button><button class="btn secondary" id="back">BACK</button></div><div id="roomCode" class="hint"></div></div><div class="section"><div class="label">JOIN A ROOM</div><input id="codeInput" placeholder="ENTER CODE" maxlength="6" style="width:100%;padding:15px;border-radius:12px;background:#07182c;color:white;border:1px solid #b7e8ff55;letter-spacing:.2em"><p class="hint">Joining is a visual preview only. No internet connection or multiplayer server is active yet.</p><button class="btn secondary" id="join">JOIN PREVIEW</button></div></div>
+</div></div>
+<div id="customPanel" class="hidden" style="position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#041226bb;backdrop-filter:blur(8px)">
+  <div class="workshop">
+    <div class="racerPreview"><div class="humanPreview"><div class="hp-hat" id="previewHat"></div><div class="hp-head"></div><div class="hp-body" id="previewShirt"></div><div class="hp-arm left"></div><div class="hp-arm right"></div><div class="hp-leg left"></div><div class="hp-leg right"></div></div><div class="previewTag">YOUR SKYBOUND RACER</div></div>
+    <div class="workshopControls">
+    <div class="label">CHARACTER WORKSHOP</div><h2 style="margin:4px 0 8px">CREATE YOUR RACER</h2>
+    <p class="hint">A classic human racer. Unlock new outfits as you earn XP from races.</p>
+    <div class="choiceTitle">SHIRT STYLE</div><div id="shirtChoices" class="clothes">
+      <button class="clothing active" data-shirt="0" data-color="#36a9e8">Starter hoodie <small>FREE</small></button>
+      <button class="clothing locked" data-shirt="1" data-color="#f1b84b">Gold jacket <small>LV 2</small></button>
+      <button class="clothing locked" data-shirt="2" data-color="#a77bdf">Violet racer <small>LV 4</small></button>
+      <button class="clothing locked" data-shirt="3" data-color="#55c98b">Sky explorer <small>LV 6</small></button>
+    </div>
+    <div class="choiceTitle">PANTS</div><div id="pantsChoices" class="clothes">
+      <button class="clothing active" data-pants="0" data-color="#27364f">Classic joggers <small>FREE</small></button>
+      <button class="clothing locked" data-pants="1" data-color="#465b78">Trail pants <small>LV 3</small></button>
+      <button class="clothing locked" data-pants="2" data-color="#27233d">Night runner <small>LV 5</small></button>
+    </div>
+    <div class="choiceTitle">HEADWEAR</div><div id="hatChoices" class="clothes">
+      <button class="clothing active" data-hat="0">No hat <small>FREE</small></button>
+      <button class="clothing locked" data-hat="1">Blue cap <small>LV 3</small></button>
+      <button class="clothing locked" data-hat="2">Gold crown <small>LV 7</small></button>
+    </div>
+    <div class="choiceTitle">PROGRESSION ROAD</div>
+    <div class="xpRoad"><div class="xpTop"><b id="levelLabel">LEVEL 1</b><span id="xpLabel">0 / 100 XP</span></div><div class="xpTrack"><div id="xpFill"></div></div><div class="xpStops" id="xpStops"></div></div>
+    <div class="actions"><button class="btn" id="saveCustom">SAVE LOOK</button><button class="btn secondary" id="closeCustom">BACK</button></div>
+    </div>
+  </div>
+</div>
+<div id="hud" class="hidden"><div class="hudtop"><div class="hudbox">WORLD<strong id="worldName">CLOUDWAY</strong></div><div class="hudbox">TIME<strong id="time">90</strong></div><div class="hudbox">CHECKPOINT<strong id="checkpoint">1 / 5</strong></div></div><button id="exitGame" class="exitGame" type="button">EXIT TO LOBBY</button><div class="centermsg" id="message">GO! GO! GO!</div><div class="controls">MOVE · WASD / ARROWS<br>JUMP · SPACE<br>TRAMPOLINES · AUTO-BOUNCE<br>RESET · R</div><div class="mobile"><button id="jumpBtn">↑</button></div></div><div id="toast"></div>
+<script>
+window.__skyReady = false;
+window.__skyStartQueued = false;
+setTimeout(()=>document.querySelector('#launchScreen')?.classList.add('done'),2200);
+window.__skyStartNow = function () {
+  const button = document.getElementById('play');
+  if (window.__skyReady && typeof window.startSkyRace === 'function') {
+    window.startSkyRace();
+    return;
+  }
+  window.__skyStartQueued = true;
+  if (button) {
+    button.textContent = 'LOADING RACE…';
+    button.disabled = true;
+  }
+};
+window.addEventListener('error', function (event) {
+  console.error('SKYBOUND error:', event.message, event.filename, event.lineno);
+  if (!window.__skyReady) {
+    const button = document.getElementById('play');
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'GAME ERROR — REFRESH';
+      button.onclick = function () { location.reload(); };
+    }
+    const subtitle = document.querySelector('.sub');
+    if (subtitle) subtitle.textContent =
+      'The game hit a startup error. Open Chrome Console (Ctrl + Shift + J) and send me the red error.';
+  }
+});
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const root = document.querySelector('#game');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8bd7f2);
+scene.fog = new THREE.Fog(0x8bd7f2, 65, 190);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 350);
+camera.position.set(0, 8, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+root.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xe8faff, 0x536b86, 2.1));
+const sun = new THREE.DirectionalLight(0xfff4dc, 2.8);
+sun.position.set(-15, 28, 12);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+
+const mat = (color, roughness = 0.68, extra = {}) =>
+  new THREE.MeshStandardMaterial({ color, roughness, ...extra });
+
+const worldStyles = {
+  cloud: {
+    bg: 0x8bd7f2, fog: 0x8bd7f2,
+    platform: [0xeaf8ff, 0x9bdff1, 0x7bc7e5],
+    trim: 0x5abbd8, cloud: 0xffffff, glow: 0xffe39a
+  },
+  sunset: {
+    bg: 0x63c8e8, fog: 0x63c8e8,
+    platform: [0x70bd62, 0x4f9e50, 0x8bd16c],
+    trim: 0x347b55, cloud: 0xefffff, glow: 0xffe28a
+  },
+  ice: {
+    bg: 0x351b18, fog: 0x713a27,
+    platform: [0x8b4b32, 0x65382d, 0xc16b3b],
+    trim: 0x45231e, cloud: 0xffb16b, glow: 0xffc04d
+  },
+  neon: {
+    bg: 0x171b3e, fog: 0x252b68,
+    platform: [0x8c8aa0, 0x65657d, 0xb5a9a0],
+    trim: 0x3e425f, cloud: 0xb3c7ff, glow: 0x9ffaff
+  }
+};
+
+let map = 'cloud';
+let mapBeforeInfinite = 'cloud';
+let gameMode = 'race';
+let mazeDifficulty = 'easy';
+let hideSeekRole = 'hider';
+let hideSeekBots = [];
+let hideSeekCaught = 0;
+let hideSeekTagOrder = 0;
+let hideSeekPlayerTagged = false;
+let hideSeekPlayerPlace = 0;
+let hideSeekFinished = false;
+let mazeGrid = null;
+let mazeWalls = [];
+let mazeOpenEdges = new Set();
+let mazeCellCount = 0;
+let mazeCellSize = 4.2;
+let mazeHalfSize = 0;
+let shirtStyle = 0, pantsStyle = 0, hatStyle = 0;
+let xpTotal = Number(localStorage.getItem('skyboundXP') || 0);
+let playerLevel = Math.floor(xpTotal / 100) + 1;
+let shirtColors = [0x36a9e8,0xf1b84b,0xa77bdf,0x55c98b];
+let pantsColors = [0x27364f,0x465b78,0x27233d];
+let playing = false;
+let elapsed = 0;
+let remaining = 150;
+let infiniteMode = false;
+let infinitePlatformCount = 0;
+let infiniteNextIndex = 16;
+let infiniteLastZ = 0;
+let infiniteHighScore = Number(localStorage.getItem('skyboundInfiniteHighScore') || 0);
+let rollingLogs = [];
+let bouncingBalls = [];
+let checkpointCount = 0;
+let respawnPlatformIndex = 0;
+let onGround = false;
+let velocity = new THREE.Vector3();
+const keys = {};
+let player = null;
+let playerVisual = null;
+let platforms = [];
+let checkpoints = [];
+let decorations = [];
+let trampolines = [];
+let hazards = [];
+let laserBeams = [];
+let scenery = [];
+let hexTiles = [];
+let hexBots = [];
+let laserBots = [];
+let spectating = false;
+let spectatorTarget = 0;
+let hexRound = 1;
+let hexRoundClock = 0;
+let hexEliminations = 0;
+let hexRoundFinished = false;
+
+const infiniteToggle=document.querySelector('#infiniteModeToggle');
+const infiniteScoreLabel=document.querySelector('#infiniteHighScore');
+function refreshInfiniteScore(){
+  if(infiniteScoreLabel) infiniteScoreLabel.textContent=`HIGH SCORE: ${infiniteHighScore} PLATFORMS`;
+}
+refreshInfiniteScore();
+infiniteToggle?.addEventListener('click',()=>{
+  if(!infiniteMode){
+    mapBeforeInfinite=map;
+    infiniteMode=true;
+    // Infinite Mode always uses the green-island / blue-water visual theme.
+    map='sunset';
+  } else {
+    infiniteMode=false;
+    map=mapBeforeInfinite || 'cloud';
+  }
+  infiniteToggle.classList.toggle('active',infiniteMode);
+  infiniteToggle.setAttribute('aria-pressed',String(infiniteMode));
+  mapButtons.querySelectorAll('[data-map]').forEach(button=>{
+    button.disabled=infiniteMode;
+    button.classList.toggle('active',button.dataset.map===map);
+    button.setAttribute('aria-disabled',String(infiniteMode));
+  });
+  buildWorld();
+  toast(infiniteMode?'Infinite Mode selected!':'Standard Sky Race selected.');
+});
+const mapButtons = document.querySelector('#maps');
+mapButtons.addEventListener('click', event => {
+  const button = event.target.closest('[data-map]');
+  if (!button || infiniteMode || button.disabled) return;
+  map = button.dataset.map;
+  mapButtons.querySelectorAll('.map').forEach(item =>
+    item.classList.toggle('active', item === button)
+  );
+  buildWorld();
+});
+
+
+document.querySelector('#mazeDifficultySidebar').addEventListener('click', event => {
+  const difficultyButton = event.target.closest('[data-difficulty]');
+  const roleButton = event.target.closest('[data-role]');
+  if (difficultyButton) {
+    mazeDifficulty = difficultyButton.dataset.difficulty;
+    document.querySelectorAll('#mazeDifficultySidebar [data-difficulty]').forEach(item =>
+      item.classList.toggle('active', item === difficultyButton)
+    );
+    buildWorld();
+  }
+  if (roleButton) {
+    hideSeekRole = roleButton.dataset.role;
+    document.querySelectorAll('#mazeDifficultySidebar [data-role]').forEach(item =>
+      item.classList.toggle('active', item === roleButton)
+    );
+    buildWorld();
+  }
+});
+
+document.querySelector('#modeChoices').addEventListener('click', event => {
+  const card = event.target.closest('[data-mode]');
+  if (!card) return;
+  gameMode = card.dataset.mode;
+  document.querySelector('#checkpoint').closest('.hudbox').classList.toggle('hidden', gameMode === 'hex');
+  document.querySelector('#mazeSidebarDifficulty').classList.toggle('hidden', gameMode !== 'laser');
+  document.querySelector('#modeChoices').querySelectorAll('[data-mode]').forEach(item =>
+    item.classList.toggle('active', item === card)
+  );
+  buildWorld();
+  if (gameMode === 'laser') {
+    document.querySelector('#play').textContent = 'START HIDE & SEEK ↗';
+  }
+  document.querySelectorAll('#modeChoices .modeCard').forEach(item =>
+    item.classList.toggle('active', item === card)
+  );
+  const play = document.querySelector('#play');
+  play.textContent = gameMode === 'race' ? 'START SKY RACE ↗' :
+    gameMode === 'hex' ? 'ENTER HEX SURVIVAL ↗' : 'START HIDE & SEEK ↗';
+  const descriptions = {
+    race: 'Race across floating worlds, clear bigger gaps, hit springy trampolines and reach the finish.',
+    hex: 'Five stacked layers of connected hex tiles. Stand on a tile for two seconds, then drop to the next layer.',
+    laser: 'Hide and seek with eight racers. Choose your difficulty and play as a hider or seeker.'
+  };
+  document.querySelector('.sub').textContent = descriptions[gameMode];
+});
+function refreshProgressionUI() {
+  playerLevel = Math.floor(xpTotal / 100) + 1;
+  const into = xpTotal % 100;
+  document.querySelector('#levelLabel').textContent = `LEVEL ${playerLevel}`;
+  document.querySelector('#xpLabel').textContent = `${into} / 100 XP`;
+  document.querySelector('#xpFill').style.width = `${into}%`;
+  document.querySelector('#xpStops').innerHTML = '<span>LV 1</span><span>LV 3</span><span>LV 5</span><span>LV 7</span><span>LV 9</span>';
+  document.querySelectorAll('[data-shirt]').forEach(btn => { const need=[1,2,4,6][Number(btn.dataset.shirt)]; btn.classList.toggle('locked',playerLevel<need); btn.classList.toggle('active',shirtStyle===Number(btn.dataset.shirt)); });
+  document.querySelectorAll('[data-pants]').forEach(btn => { const need=[1,3,5][Number(btn.dataset.pants)]; btn.classList.toggle('locked',playerLevel<need); btn.classList.toggle('active',pantsStyle===Number(btn.dataset.pants)); });
+  document.querySelectorAll('[data-hat]').forEach(btn => { const need=[1,3,7][Number(btn.dataset.hat)]; btn.classList.toggle('locked',playerLevel<need); btn.classList.toggle('active',hatStyle===Number(btn.dataset.hat)); });
+}
+function refreshPreview() {
+  document.querySelector('#previewShirt').style.background = '#'+shirtColors[shirtStyle].toString(16).padStart(6,'0');
+  document.querySelector('.hp-leg.left').style.background = '#'+pantsColors[pantsStyle].toString(16).padStart(6,'0');
+  document.querySelector('.hp-leg.right').style.background = '#'+pantsColors[pantsStyle].toString(16).padStart(6,'0');
+  document.querySelector('#previewHat').style.display = hatStyle ? 'block' : 'none';
+  document.querySelector('#previewHat').style.background = hatStyle===2?'#e0b64d':'#258bd1';
+}
+document.querySelector('#customize').onclick = () => {
+  refreshProgressionUI(); refreshPreview();
+  document.querySelector('#customPanel').classList.remove('hidden');
+};
+document.querySelector('#closeCustom').onclick = () => document.querySelector('#customPanel').classList.add('hidden');
+document.querySelector('#shirtChoices').addEventListener('click',e=>{
+  const b=e.target.closest('[data-shirt]'); if(!b)return;
+  const n=Number(b.dataset.shirt), need=[1,2,4,6][n]; if(playerLevel<need){toast(`Unlocks at level ${need}`);return;}
+  shirtStyle=n;refreshProgressionUI();refreshPreview();updateRacerAppearance();
+});
+document.querySelector('#pantsChoices').addEventListener('click',e=>{
+  const b=e.target.closest('[data-pants]'); if(!b)return;
+  const n=Number(b.dataset.pants), need=[1,3,5][n]; if(playerLevel<need){toast(`Unlocks at level ${need}`);return;}
+  pantsStyle=n;refreshProgressionUI();refreshPreview();updateRacerAppearance();
+});
+document.querySelector('#hatChoices').addEventListener('click',e=>{
+  const b=e.target.closest('[data-hat]'); if(!b)return;
+  const n=Number(b.dataset.hat), need=[1,3,7][n]; if(playerLevel<need){toast(`Unlocks at level ${need}`);return;}
+  hatStyle=n;refreshProgressionUI();refreshPreview();updateRacerAppearance();
+});
+document.querySelector('#saveCustom').onclick=()=>{
+  localStorage.setItem('skyboundShirt',shirtStyle);localStorage.setItem('skyboundPants',pantsStyle);localStorage.setItem('skyboundHat',hatStyle);saveSkyProfile();
+  document.querySelector('#customPanel').classList.add('hidden');toast('Outfit saved!');
+};
+shirtStyle=Number(localStorage.getItem('skyboundShirt')||0);
+pantsStyle=Number(localStorage.getItem('skyboundPants')||0);
+hatStyle=Number(localStorage.getItem('skyboundHat')||0);
+refreshProgressionUI();refreshPreview();
+
+function roundedPlatformGeometry(width, depth, thickness, radius = 0.48) {
+  const w = width / 2;
+  const d = depth / 2;
+  const r = Math.min(radius, w * 0.42, d * 0.42);
+  const shape = new THREE.Shape();
+  shape.moveTo(-w + r, -d);
+  shape.lineTo(w - r, -d);
+  shape.quadraticCurveTo(w, -d, w, -d + r);
+  shape.lineTo(w, d - r);
+  shape.quadraticCurveTo(w, d, w - r, d);
+  shape.lineTo(-w + r, d);
+  shape.quadraticCurveTo(-w, d, -w, d - r);
+  shape.lineTo(-w, -d + r);
+  shape.quadraticCurveTo(-w, -d, -w + r, -d);
+
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness,
+    bevelEnabled: true,
+    bevelSegments: 4,
+    steps: 1,
+    bevelSize: 0.10,
+    bevelThickness: 0.07,
+    curveSegments: 10
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, -thickness / 2, 0);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function clearWorld() {
+  // Hex tile countdown labels are separate scene sprites, not children of the tile meshes.
+  // Remove and dispose them explicitly so they can never float into another game mode.
+  for (const tile of hexTiles) {
+    if (tile.countdownSprite) {
+      scene.remove(tile.countdownSprite);
+      if (tile.countdownSprite.material?.map) tile.countdownSprite.material.map.dispose();
+      tile.countdownSprite.material?.dispose();
+      tile.countdownSprite = null;
+    }
+  }
+  // Remove every Hex Survival bot group explicitly before resetting the mode arrays.
+  for (const botRecord of hexBots) {
+    if (botRecord.group) {
+      scene.remove(botRecord.group);
+      botRecord.group.traverse?.(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+          else child.material.dispose();
+        }
+      });
+    }
+  }
+  for (const object of [...platforms.map(p => p.mesh), ...checkpoints, ...decorations, ...trampolines.map(t => t.group), ...hazards.map(h => h.group), ...laserBeams.map(b => b.group), ...rollingLogs.map(log => log.group), ...bouncingBalls.map(ball => ball.group), ...scenery, ...laserBots]) {
+    scene.remove(object);
+    object.traverse?.(child => {
+      if (child.geometry) child.geometry.dispose();
+    });
+    if (object.geometry) object.geometry.dispose();
+  }
+  if (player) scene.remove(player);
+  platforms = [];
+  checkpoints = [];
+  decorations = [];
+  trampolines = [];
+  hazards = [];
+  laserBeams = [];
+  rollingLogs = [];
+  bouncingBalls = [];
+  mazeWalls = [];
+  scenery = [];
+  hexTiles = []; hexBots = []; laserBots = []; hideSeekBots.forEach(b=>{
+    scene.remove(b.group);
+    b.group.traverse?.(child=>{
+      if(child.geometry) child.geometry.dispose();
+      if(child.material){
+        if(Array.isArray(child.material)) child.material.forEach(m=>m.dispose());
+        else child.material.dispose();
+      }
+    });
+  });
+  hideSeekBots=[]; hideSeekCaught=0; hideSeekTagOrder=0; hideSeekPlayerTagged=false; hideSeekPlayerPlace=0; hideSeekFinished=false; spectating=false; spectatorTarget=0; hexRound = 1; hexRoundClock = 0;
+  player = null;
+  playerVisual = null;
+}
+
+function addPlatform(index, x, y, z, width, depth, color) {
+  const mesh = new THREE.Mesh(
+    roundedPlatformGeometry(width, depth, 0.8),
+    mat(color, 0.54)
+  );
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  // A narrow, darker underside gives the floating island a clean finished edge.
+  const underside = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.42, 0.55, 8),
+    mat(worldStyles[map].trim)
+  );
+  underside.position.set(x, y - 0.55, z);
+  underside.scale.set(width * 0.75, 1, depth * 0.75);
+  underside.castShadow = true;
+  scene.add(underside);
+  scenery.push(underside);
+
+  const platform = {
+    index, mesh, x, y, z, width, depth,
+    topY: y + 0.4
+  };
+  platforms.push(platform);
+  return platform;
+}
+
+function addCheckpoint(platform, number, isFinish = false) {
+  const ringMaterial = new THREE.MeshStandardMaterial({
+    color: isFinish ? 0xffe39a : worldStyles[map].glow,
+    emissive: isFinish ? 0xffa52e : worldStyles[map].glow,
+    emissiveIntensity: 0.72,
+    metalness: 0.25,
+    roughness: 0.3
+  });
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(isFinish ? 1.65 : 1.25, 0.12, 16, 48),
+    ringMaterial
+  );
+  ring.position.set(platform.x, platform.topY + 2.0, platform.z - 0.2);
+  ring.userData.checkpointNumber = number;
+  ring.userData.isFinish = isFinish;
+  scene.add(ring);
+  checkpoints.push(ring);
+
+  const postMaterial = mat(worldStyles[map].trim, 0.42, { metalness: 0.22 });
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.10, 0.14, 2.0, 12),
+      postMaterial
+    );
+    post.position.set(platform.x + side * (isFinish ? 1.8 : 1.38), platform.topY + 1.0, platform.z - 0.2);
+    scene.add(post);
+    scenery.push(post);
+  }
+}
+
+function addTrampoline(platform, number) {
+  const group = new THREE.Group();
+  group.position.set(platform.x, platform.topY, platform.z);
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.35, 1.5, 0.26, 40),
+    mat(0x163b59, 0.36, { metalness: 0.6 })
+  );
+  base.position.y = 0.10;
+  base.castShadow = true;
+  group.add(base);
+
+  const springTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.18, 1.22, 0.13, 40),
+    new THREE.MeshStandardMaterial({
+      color: 0x42e7f5,
+      emissive: 0x1399b5,
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+      metalness: 0.18
+    })
+  );
+  springTop.position.y = 0.28;
+  springTop.castShadow = true;
+  group.add(springTop);
+
+  for (const radius of [0.82, 1.12]) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.055, 10, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0xc8ffff,
+        emissive: 0x2acfe4,
+        emissiveIntensity: 0.65
+      })
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.36;
+    group.add(ring);
+  }
+
+  const center = new THREE.Mesh(
+    new THREE.CircleGeometry(0.55, 32),
+    new THREE.MeshBasicMaterial({ color: 0xd8ffff, transparent: true, opacity: 0.82 })
+  );
+  center.rotation.x = -Math.PI / 2;
+  center.position.y = 0.35;
+  group.add(center);
+
+  scene.add(group);
+  trampolines.push({
+    group,
+    x: platform.x,
+    z: platform.z,
+    surfaceY: platform.topY + 0.36,
+    platformIndex: platform.index,
+    cooldown: 0,
+    number
+  });
+}
+
+
+function addSwingingHazard(platform, phase = 0) {
+  const group = new THREE.Group();
+  // The frame and pivot are deliberately above the platform surface.
+  group.position.set(platform.x, platform.topY, platform.z);
+  const frameMat = mat(0x344b63, 0.32, { metalness: 0.68 });
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.32, 0.38), frameMat);
+  beam.position.set(0, 5.15, 0);
+  beam.castShadow = true;
+  group.add(beam);
+
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 5.1, 0.34),
+      frameMat
+    );
+    post.position.set(side * 2.55, 2.55, 0);
+    post.castShadow = true;
+    group.add(post);
+    const foot = new THREE.Mesh(
+      new THREE.BoxGeometry(0.75, 0.18, 0.85),
+      mat(0x263b50, 0.42, { metalness: 0.45 })
+    );
+    foot.position.set(side * 2.55, 0.12, 0);
+    group.add(foot);
+  }
+
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 4.95, 0);
+  group.add(pivot);
+
+  const chain = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.09, 0.09, 2.0, 12),
+    mat(0x9aafc1, 0.28, { metalness: 0.88 })
+  );
+  chain.position.y = -1.0;
+  chain.castShadow = true;
+  pivot.add(chain);
+
+  const hub = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 20, 16),
+    mat(0xffd16b, 0.25, { metalness: 0.78 })
+  );
+  hub.position.y = -2.05;
+  pivot.add(hub);
+
+  const handle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.13, 0.17, 1.35, 14),
+    mat(0x74452c, 0.55)
+  );
+  handle.position.set(0, -2.72, 0);
+  pivot.add(handle);
+
+  // Broad crescent-like axe head, much larger and easy to see.
+  const bladeShape = new THREE.Shape();
+  bladeShape.moveTo(-0.08, 0.25);
+  bladeShape.quadraticCurveTo(-0.75, 1.15, -1.55, 0.82);
+  bladeShape.quadraticCurveTo(-2.05, 0.25, -1.55, -0.48);
+  bladeShape.quadraticCurveTo(-0.9, -0.98, -0.08, -0.35);
+  bladeShape.lineTo(-0.08, 0.25);
+  const bladeGeometry = new THREE.ExtrudeGeometry(bladeShape, {
+    depth: 0.22, bevelEnabled: true, bevelSegments: 3,
+    steps: 1, bevelSize: 0.09, bevelThickness: 0.08
+  });
+  bladeGeometry.translate(0, -2.78, -0.11);
+  const blade = new THREE.Mesh(
+    bladeGeometry,
+    new THREE.MeshStandardMaterial({
+      color: 0xdce8f1, metalness: 0.86, roughness: 0.22,
+      emissive: 0x33465a, emissiveIntensity: 0.18
+    })
+  );
+  blade.castShadow = true;
+  pivot.add(blade);
+
+  const dangerGlow = new THREE.Mesh(
+    new THREE.TorusGeometry(1.8, 0.055, 10, 48),
+    new THREE.MeshBasicMaterial({ color: 0xff6259, transparent: true, opacity: 0.78 })
+  );
+  dangerGlow.rotation.x = Math.PI / 2;
+  dangerGlow.position.y = 0.08;
+  group.add(dangerGlow);
+
+  scene.add(group);
+  hazards.push({
+    group, pivot, x: platform.x, z: platform.z,
+    phase, time: phase, hitCooldown: 0,
+    platformIndex: platform.index,
+    localBladePoint: new THREE.Vector3(-0.8, -2.8, 0)
+  });
+}
+
+function addInfiniteLaserBar(platform, phase=0){
+  const group=new THREE.Group();
+  group.position.set(platform.x,platform.topY+.78,platform.z);
+  const pivot=new THREE.Group(); group.add(pivot);
+  const beam=new THREE.Mesh(
+    new THREE.BoxGeometry(platform.width*1.5,.18,.22),
+    new THREE.MeshStandardMaterial({color:0x6ff8ff,emissive:0x00cfff,emissiveIntensity:2.2})
+  );
+  pivot.add(beam);
+  const glow=new THREE.Mesh(
+    new THREE.BoxGeometry(platform.width*1.5,.06,.34),
+    new THREE.MeshBasicMaterial({color:0xffffff})
+  );
+  glow.position.y=.02; pivot.add(glow);
+  scene.add(group);
+  laserBeams.push({group,pivot,phase,time:0,hitCooldown:0,halfLength:platform.width*.75,infiniteBar:true});
+}
+
+function addRollingLog(platform, phase=0){
+  const group=new THREE.Group();
+  group.position.set(platform.x,platform.topY+0.72,platform.z);
+  const wood=new THREE.MeshStandardMaterial({color:0x8b542d,roughness:.82});
+  const bark=new THREE.Mesh(new THREE.CylinderGeometry(.66,.66,platform.width*.88,14,1),wood);
+  bark.rotation.z=Math.PI/2;
+  bark.castShadow=true; bark.receiveShadow=true; group.add(bark);
+  for(let end of [-1,1]){
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.12,12),new THREE.MeshStandardMaterial({color:0xdeb078,roughness:.9}));
+    cap.rotation.z=Math.PI/2; cap.position.x=end*platform.width*.44; group.add(cap);
+    const rings=new THREE.Mesh(new THREE.TorusGeometry(.48,.045,8,24),new THREE.MeshStandardMaterial({color:0x60391f}));
+    rings.rotation.y=Math.PI/2; rings.position.x=end*platform.width*.44; group.add(rings);
+  }
+  scene.add(group);
+  rollingLogs.push({group,platform,phase,time:phase,hitCooldown:0,baseZ:platform.z,travel:Math.max(1.3,platform.depth*.34)});
+}
+function addBouncingBall(platform,phase=0){
+  const group=new THREE.Group();
+  group.position.set(platform.x,platform.topY,platform.z);
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.18,.24,24),new THREE.MeshStandardMaterial({color:0x394b72,metalness:.55,roughness:.35}));
+  pad.position.y=.14; group.add(pad);
+  const ballRadius=Math.max(3.05,platform.width*.52);
+  const ball=new THREE.Mesh(new THREE.SphereGeometry(ballRadius,40,32),new THREE.MeshStandardMaterial({color:0xbfc5d0,roughness:.92,metalness:.04}));
+  ball.position.y=ballRadius+.22; ball.castShadow=true; group.add(ball);
+  // Dark, shallow-looking patches give the bouncing obstacle a moon-like cratered surface.
+  const craterMat=new THREE.MeshStandardMaterial({color:0x858d9b,roughness:1,metalness:0});
+  const craterLightMat=new THREE.MeshStandardMaterial({color:0xd5d9e0,roughness:1,metalness:0});
+  const craterSpots=[
+    [ .12, .72, .68, .24],[-.58,.36,.64,.19],[.67,.18,.48,.16],
+    [-.22,-.54,.81,.22],[.55,-.52,.38,.14],[-.78,-.08,.35,.13],
+    [.02,.05, .99,.12],[-.42,.78,.18,.11]
+  ];
+  for(let i=0;i<craterSpots.length;i++){
+    const [nx,ny,nz,size]=craterSpots[i];
+    const normal=new THREE.Vector3(nx,ny,nz).normalize();
+    const crater=new THREE.Mesh(new THREE.SphereGeometry(size,16,12),i%3===0?craterLightMat:craterMat);
+    crater.position.copy(normal).multiplyScalar(ballRadius*.985);
+    crater.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),normal);
+    crater.scale.set(1,.22,1);
+    ball.add(crater);
+  }
+  const glow=new THREE.PointLight(0xcbd7f4,1.8,13); glow.position.y=ball.position.y; group.add(glow);
+  scene.add(group);
+  bouncingBalls.push({group,ball,platform,phase,time:phase,hitCooldown:0,baseY:ballRadius+.22,radius:ballRadius});
+}
+function createRacer() {
+  player = new THREE.Group();
+  playerVisual = new THREE.Group();
+  player.add(playerVisual);
+  const skin = mat(0xdba77e,0.72), shirt = mat(shirtColors[shirtStyle]), pants = mat(pantsColors[pantsStyle]), shoes = mat(0x202b3d);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.34,24,18),skin);
+  head.position.y=1.62; playerVisual.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(.35,20,14),mat(0x3a2a24));
+  hair.scale.set(1,.48,1); hair.position.set(0,1.84,0); playerVisual.add(hair);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.34,.62,6,12),shirt);
+  torso.position.y=1.02; playerVisual.add(torso);
+  const armGeo = new THREE.CapsuleGeometry(.105,.55,4,10);
+  for (const side of [-1,1]) {
+    const arm = new THREE.Mesh(armGeo,skin); arm.position.set(side*.43,1.02,0); arm.rotation.z=side*-.12; playerVisual.add(arm);
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.14,.55,4,10),pants); leg.position.set(side*.17,.38,0); playerVisual.add(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(.25,.13,.38),shoes); shoe.position.set(side*.17,.08,-.07); playerVisual.add(shoe);
+  }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.12,20),mat(0x258bd1));
+  cap.position.set(0,2.02,0); cap.visible=hatStyle>0; playerVisual.add(cap);
+  updateRacerAppearance();
+  scene.add(player);
+}
+function updateRacerAppearance() {
+  if (!playerVisual) return;
+  const meshes=playerVisual.children;
+  if (meshes[2]?.material?.color) meshes[2].material.color.setHex(shirtColors[shirtStyle]);
+  for (const mesh of [meshes[4],meshes[7]]) if(mesh?.material?.color) mesh.material.color.setHex(pantsColors[pantsStyle]);
+  const cap=meshes[9]; if(cap){cap.visible=hatStyle>0;cap.material.color.setHex(hatStyle===2?0xe0b64d:0x258bd1);}
+}
+function buildWorld() {
+  clearWorld();
+  const style = worldStyles[map];
+  scene.background.setHex(map === 'ice' ? 0x78c9e8 : style.bg);
+  scene.fog.color.setHex(map === 'ice' ? 0x9bd9e8 : style.fog);
+
+  // Hex Survival: five stacked layers of tightly packed hex tiles.
+  if (gameMode === 'hex') {
+    scene.background.setHex(0x17224d);
+    scene.fog.color.setHex(0x26396c);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(70,64),
+      new THREE.MeshStandardMaterial({color:0x102c58,roughness:.3,metalness:.25}));
+    water.rotation.x=-Math.PI/2; water.position.y=-20; scene.add(water); scenery.push(water);
+    const tileRadius=1.72, spacingX=Math.sqrt(3)*tileRadius*.985, spacingZ=1.5*tileRadius*.985;
+    let index=0;
+    for(let layer=0;layer<5;layer++){
+      const layerY=.26-layer*3.7;
+      for(let q=-3;q<=3;q++){
+        for(let r=-3;r<=3;r++){
+          if(Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))>3) continue;
+          const x=(q+r*.5)*spacingX, z=r*spacingZ;
+          const material=new THREE.MeshStandardMaterial({
+            color:[0x4b9de0,0x55b9a7,0x9b85df,0xe29b54,0xe36f79][layer],
+            roughness:.48,metalness:.16,emissive:0x102c66
+          });
+          const mesh=new THREE.Mesh(new THREE.CylinderGeometry(tileRadius,tileRadius,.48,6),material);
+          mesh.position.set(x,layerY-.24,z); mesh.rotation.y=Math.PI/6;
+          mesh.castShadow=true; mesh.receiveShadow=true;
+          scene.add(mesh);
+          const tile={index:index++,layer,mesh,x,z,topY:layerY,active:true,warning:false,collapseAt:Infinity,collapsing:false};
+          hexTiles.push(tile);
+          // Slightly overlapping support circles eliminate walkable gaps between hexes.
+          platforms.push({index:tile.index,mesh,x,y:layerY-.24,z,width:tileRadius*2,depth:tileRadius*2,topY:layerY,radius:tileRadius*.99,hexTile:tile});
+        }
+      }
+    }
+    createRacer();
+    respawnPlatformIndex=0;
+    player.position.set(0,.26,0); velocity.set(0,0,0); onGround=true;
+    const hexBotColors=[0xff8a55,0xf3d45b,0x9d83f4,0x61d6b2,0xf27eae];
+    for(let i=0;i<5;i++){
+      const bot=new THREE.Group();
+      const body=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.62,4,8),
+        new THREE.MeshStandardMaterial({color:hexBotColors[i],roughness:.62}));
+      body.position.y=.78; bot.add(body);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.29,16,12),
+        new THREE.MeshStandardMaterial({color:0xffd6b8,roughness:.8}));
+      head.position.y=1.42; bot.add(head);
+      const angle=i*Math.PI*2/5, radius=4.5;
+      bot.position.set(Math.cos(angle)*radius,.26,Math.sin(angle)*radius);
+      scene.add(bot);
+      hexBots.push({group:bot,angle,radius,speed:.65+i*.08,hop:0,hopClock:.5+i*.22,layer:0});
+    }
+    document.querySelector('#worldName').textContent='HEX SURVIVAL • LAYER 1/5';
+    document.querySelector('#checkpoint').textContent='';
+    document.querySelector('#checkpoint').textContent='';
+    return;
+  }
+
+
+  // Hide & Seek: large corridor maze. Eight participants total: player + seven bots.
+  if (gameMode === 'laser') {
+    const sizes = {beginner:7, easy:9, medium:11, difficult:13, hard:15};
+    const cells = sizes[mazeDifficulty] || 9;
+    const cell = 4.2;
+    const half = cells * cell / 2;
+    const wallH = 2.8, wallT = .34;
+    const floorSize = cells * cell + 24;
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(floorSize,.7,floorSize),
+      new THREE.MeshStandardMaterial({color:map==='ice'?0x8bbbd0:map==='neon'?0x42416f:map==='sunset'?0x477e62:0x397b69,roughness:.9}));
+    floor.position.set(0,-.35,0); floor.receiveShadow=true; scene.add(floor);
+    platforms.push({index:0,mesh:floor,x:0,y:-.35,z:0,width:floorSize,depth:floorSize,topY:0});
+    const wallMat = new THREE.MeshStandardMaterial({color:map==='ice'?0x315a78:map==='neon'?0x29294e:0x254b63,roughness:.7});
+    mazeGrid = Array.from({length:cells},()=>Array(cells).fill(false));
+    // Recursive backtracker creates connected passages; difficulty increases maze size.
+    const visited = Array.from({length:cells},()=>Array(cells).fill(false));
+    const stack=[[0,0]]; visited[0][0]=true;
+    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    const edges = new Set();
+    const edgeKey=(x,z,nx,nz)=>`${Math.min(x,nx)},${Math.min(z,nz)}:${Math.max(x,nx)},${Math.max(z,nz)}`;
+    while(stack.length){
+      const [x,z]=stack[stack.length-1];
+      const choices=dirs.map(([dx,dz])=>[x+dx,z+dz]).filter(([nx,nz])=>nx>=0&&nz>=0&&nx<cells&&nz<cells&&!visited[nz][nx]);
+      if(!choices.length){stack.pop();continue;}
+      const [nx,nz]=choices[Math.floor(Math.random()*choices.length)];
+      edges.add(edgeKey(x,z,nx,nz)); visited[nz][nx]=true; stack.push([nx,nz]);
+    }
+    const extraOpenChance = ({beginner:.72,easy:.58,medium:.46,difficult:.34,hard:.26})[mazeDifficulty] || .58;
+    for(let z=0;z<cells;z++) for(let x=0;x<cells;x++){
+      if(x+1<cells && Math.random()<extraOpenChance) edges.add(edgeKey(x,z,x+1,z));
+      if(z+1<cells && Math.random()<extraOpenChance) edges.add(edgeKey(x,z,x,z+1));
+    }
+    mazeOpenEdges=edges; mazeCellCount=cells; mazeCellSize=cell; mazeHalfSize=half;
+    const addWall=(x,z,w,d)=>{
+      const wall=new THREE.Mesh(new THREE.BoxGeometry(w,wallH,d),wallMat);
+      wall.position.set(x,wallH/2,z); wall.castShadow=true; wall.receiveShadow=true;
+      scene.add(wall); scenery.push(wall); mazeWalls.push({x,z,w,d});
+    };
+    // Cell centers are walkable; add outer perimeter and walls between cells without a passage.
+    for(let z=0;z<cells;z++) for(let x=0;x<cells;x++){
+      const wx=-half+x*cell, wz=-half+z*cell;
+      if(x===0 || !edges.has(edgeKey(x,z,x-1,z))) addWall(wx-cell/2,wz,wallT,cell+wallT);
+      if(z===0 || !edges.has(edgeKey(x,z,x,z-1))) addWall(wx,wz-cell/2,cell+wallT,wallT);
+      if(x===cells-1) addWall(wx+cell/2,wz,wallT,cell+wallT);
+      if(z===cells-1) addWall(wx,wz+cell/2,cell+wallT,wallT);
+    }
+    const cellPos=(x,z)=>({x:-half+x*cell,z:-half+z*cell});
+    const startPos=cellPos(0,0), exitPos=cellPos(cells-1,cells-1);
+    const startPad=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,.18,24),
+      new THREE.MeshStandardMaterial({color:0x55d6ff,emissive:0x12344a}));
+    startPad.position.set(startPos.x,.12,startPos.z); scene.add(startPad); scenery.push(startPad);
+    const gate=new THREE.Mesh(new THREE.TorusGeometry(1.15,.16,12,28),
+      new THREE.MeshStandardMaterial({color:0xffdf79,emissive:0x6d4812}));
+    gate.position.set(exitPos.x,1.1,exitPos.z); scene.add(gate); scenery.push(gate);
+    createRacer();
+    const seekerIsPlayer=hideSeekRole==='seeker';
+    player.position.set(seekerIsPlayer?startPos.x:exitPos.x,0,seekerIsPlayer?startPos.z:exitPos.z);
+    if(playerVisual) playerVisual.traverse(obj=>{
+      if(obj.isMesh && obj.material?.color && obj.geometry?.type==='CapsuleGeometry') obj.material.color.setHex(seekerIsPlayer?0xe53935:0x2478e8);
+    });
+    velocity.set(0,0,0); onGround=true;
+    // Seven bot racers spawn across the maze so they don't clump together.
+    const botCount=7;
+    const spawnCells=[];
+    for(let z=0;z<cells;z++) for(let x=0;x<cells;x++) spawnCells.push({x,z});
+    // Shuffle the available cells, then choose positions spaced well apart.
+    for(let i=spawnCells.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [spawnCells[i],spawnCells[j]]=[spawnCells[j],spawnCells[i]];
+    }
+    const usedSpawns=[];
+    const playerCell=seekerIsPlayer?{x:0,z:0}:{x:cells-1,z:cells-1};
+    usedSpawns.push(playerCell);
+    const chosenSpawns=[];
+    while(chosenSpawns.length<botCount && spawnCells.length){
+      let bestIndex=0,bestDistance=-1;
+      for(let k=0;k<spawnCells.length;k++){
+        const c=spawnCells[k];
+        const nearest=Math.min(...usedSpawns.map(u=>Math.hypot(c.x-u.x,c.z-u.z)));
+        if(nearest>bestDistance){bestDistance=nearest;bestIndex=k;}
+      }
+      const chosen=spawnCells.splice(bestIndex,1)[0];
+      chosenSpawns.push(chosen);usedSpawns.push(chosen);
+    }
+    for(let i=0;i<botCount;i++){
+      const bot=new THREE.Group();
+      const botIsSeeker=!seekerIsPlayer && i===0;
+      const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.72,4,8),
+        new THREE.MeshStandardMaterial({color:botIsSeeker?0xe53935:0x2478e8,roughness:.65}));
+      body.position.y=.72; body.castShadow=true; bot.add(body);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.31,12,10),
+        new THREE.MeshStandardMaterial({color:0xffd7b8}));
+      head.position.y=1.48; bot.add(head);
+      const spawnCell=chosenSpawns[i]||{x:(i*3+1)%cells,z:(i*5+2)%cells};
+      const pos=cellPos(spawnCell.x,spawnCell.z);
+      bot.position.set(pos.x,0,pos.z); scene.add(bot);
+      hideSeekBots.push({group:bot,isSeeker:botIsSeeker,alive:true,think:0,tx:pos.x,tz:pos.z,speed:botIsSeeker?7.2:6.4,cellX:spawnCell.x,cellZ:spawnCell.z});
+    }
+    document.querySelector('#worldName').textContent='HIDE & SEEK • '+mazeDifficulty.toUpperCase();
+    document.querySelector('#checkpoint').textContent='8 RACERS';
+    return;
+  }
+
+  // Its radial laser arms extend outward and accelerate gradually over time.
+  if (gameMode === 'laser') {
+    const water = new THREE.Mesh(
+      new THREE.CircleGeometry(95, 64),
+      new THREE.MeshStandardMaterial({color:0x087da8,roughness:.22,metalness:.25,emissive:0x04344d,emissiveIntensity:.35})
+    );
+    water.rotation.x = -Math.PI/2;
+    water.position.set(0,-2.4,0);
+    scene.add(water); scenery.push(water);
+
+    const raftRadius = 13.2;
+    const raft = new THREE.Mesh(
+      new THREE.CylinderGeometry(raftRadius,raftRadius*.96,.72,64),
+      new THREE.MeshStandardMaterial({color:0x9a6338,roughness:.82})
+    );
+    raft.position.y = 0;
+    raft.receiveShadow = true; raft.castShadow = true;
+    scene.add(raft);
+    platforms.push({index:0,mesh:raft,x:0,y:0,z:0,width:raftRadius*2,depth:raftRadius*2,topY:.42,radius:raftRadius-.55});
+
+    // Wooden deck planks create a clear raft-like surface.
+    for(let i=0;i<22;i++){
+      const angle=i/22*Math.PI*2;
+      const plank=new THREE.Mesh(
+        new THREE.BoxGeometry(raftRadius*1.72,.035,.34),
+        new THREE.MeshStandardMaterial({color:i%2?0xb9824e:0xc58d58,roughness:.88})
+      );
+      plank.position.set(0,.385,0);
+      plank.rotation.y=angle;
+      scene.add(plank); scenery.push(plank);
+    }
+    const rim=new THREE.Mesh(
+      new THREE.TorusGeometry(raftRadius-.18,.34,12,80),
+      new THREE.MeshStandardMaterial({color:0x714528,roughness:.78})
+    );
+    rim.rotation.x=Math.PI/2; rim.position.y=.48;
+    scene.add(rim); scenery.push(rim);
+
+    // Buoyant logs beneath the deck.
+    for(let i=0;i<8;i++){
+      const a=i/8*Math.PI*2;
+      const log=new THREE.Mesh(
+        new THREE.CylinderGeometry(.48,.48,7.5,12),
+        new THREE.MeshStandardMaterial({color:0x654027,roughness:.9})
+      );
+      log.rotation.z=Math.PI/2; log.rotation.y=a;
+      log.position.set(Math.cos(a)*.2,-.68,Math.sin(a)*.2);
+      scene.add(log); scenery.push(log);
+    }
+
+    // Small corner buoys and warm lanterns make the arena readable.
+    for(let i=0;i<8;i++){
+      const a=i/8*Math.PI*2;
+      const buoy=new THREE.Mesh(new THREE.SphereGeometry(.48,16,12),
+        new THREE.MeshStandardMaterial({color:0xffa34e,roughness:.5,emissive:0x6e2600,emissiveIntensity:.3}));
+      buoy.position.set(Math.cos(a)*(raftRadius-.25),.38,Math.sin(a)*(raftRadius-.25));
+      scene.add(buoy); scenery.push(buoy);
+    }
+
+    const laserHub=new THREE.Group();
+    laserHub.position.set(0,.98,0);
+    scene.add(laserHub);
+    const hubBall=new THREE.Mesh(new THREE.SphereGeometry(.58,24,18),
+      new THREE.MeshStandardMaterial({color:0x172d54,emissive:0x00cfff,emissiveIntensity:1.5,metalness:.55}));
+    laserHub.add(hubBall);
+    const hubRing=new THREE.Mesh(new THREE.TorusGeometry(.78,.09,12,40),
+      new THREE.MeshStandardMaterial({color:0x8ffaff,emissive:0x00bfff,emissiveIntensity:1.8}));
+    hubRing.rotation.x=Math.PI/2; laserHub.add(hubRing);
+
+    const spokes=[];
+    for(let i=0;i<3;i++){
+      const spoke=new THREE.Group();
+      spoke.rotation.y=i*Math.PI*2/3;
+      const beam=new THREE.Mesh(
+        new THREE.CylinderGeometry(.105,.105,1,14),
+        new THREE.MeshStandardMaterial({color:0x7df7ff,emissive:0x04cfff,emissiveIntensity:2.0,metalness:.2,roughness:.2})
+      );
+      beam.rotation.z=Math.PI/2;
+      const core=new THREE.Mesh(
+        new THREE.CylinderGeometry(.035,.035,1,10),
+        new THREE.MeshBasicMaterial({color:0xffffff})
+      );
+      core.rotation.z=Math.PI/2;
+      spoke.add(beam,core);
+      laserHub.add(spoke);
+      spokes.push({spoke,beam,core});
+    }
+    laserBeams.push({group:laserHub,spokes,radius:raftRadius-.9,length:2.0,hitCooldown:0,rotationSpeed:.48});
+    createRacer();
+    respawnPlatformIndex=0;
+    respawnPlayer();
+    checkpointCount=0;
+    remaining=150;
+    document.querySelector('#worldName').textContent='MAGMA PEAKS • LASER RAFT';
+    document.querySelector('#checkpoint').textContent='SURVIVE';
+    document.querySelector('#time').textContent=infiniteMode?'∞':'150';
+    return;
+  }
+
+  // Each world has its own winding route. Every route has the same count,
+  // jump cadence, platform sizes and obstacle/checkpoint schedule.
+  const routePatterns = {
+    cloud:  [0, 2.4, 4.0, 1.2, -2.2, -4.0, -1.3, 2.7, 4.2, 1.5, -2.0, -4.1, -1.0, 2.5, 3.8, 0],
+    sunset: [0, -2.8, -4.1, -1.0, 2.2, 4.0, 1.5, -2.4, -4.2, -1.7, 2.5, 4.1, 1.1, -2.7, -3.8, 0],
+    ice:    [0, 3.2, -1.8, 4.1, -2.8, 1.0, -4.0, 2.5, -1.1, 4.2, -2.6, 1.2, -4.1, 2.7, -1.4, 0],
+    neon:   [0, -1.4, 3.4, -3.8, 1.6, 4.2, -2.0, -4.1, 2.6, 1.0, -3.6, 3.8, 1.4, -2.5, 4.0, 0]
+  };
+  const path = [];
+  const platformCount = 16;
+  const route = routePatterns[map];
+  for (let i = 0; i < platformCount; i++) {
+    const z = -i * 10.8;
+    const x = route[i];
+    const y = Math.floor(i / 4) * 0.42 + (i % 3 === 2 ? 0.12 : 0);
+    const width = (i % 4 === 2 || i % 5 === 3) ? 6.15 : 7.0;
+    const depth = (i % 3 === 1) ? 6.9 : 7.25;
+    const platform = addPlatform(i, x, y, z, width, depth, style.platform[i % 3]);
+    path.push(platform);
+  }
+
+  // Standard race has checkpoints; Infinite Mode tracks distance instead.
+  const checkpointIndices = [2, 5, 8, 11, 15];
+  if(!infiniteMode) checkpointIndices.forEach((index,i)=>addCheckpoint(path[index],i+1,i===checkpointIndices.length-1));
+
+  // The same three spring pads appear in every map and automatically launch the racer.
+  if (gameMode !== 'laser' && map !== 'ice') [3, 7, 12].forEach((index, i) => addTrampoline(path[index], i + 1));
+  // Standard maps keep their signature obstacle. Infinite Mode mixes three hazards
+  // over the Verdant-style green islands: logs, swinging axes and laser bars.
+  if(gameMode!=='laser'){
+    const obstacleIndices=[1,4,6,9,13,14];
+    if(infiniteMode){
+      [1,6,13].forEach((index,i)=>addRollingLog(path[index],i*.9));
+      [3,8,12].forEach((index,i)=>addSwingingHazard(path[index],i*1.12));
+      [5,10,15].forEach((index,i)=>addInfiniteLaserBar(path[index],i*.4));
+    } else if(map==='cloud') obstacleIndices.forEach((index,i)=>addSwingingHazard(path[index],i*1.12));
+    else if(map==='sunset') obstacleIndices.forEach((index,i)=>addRollingLog(path[index],i*.9));
+    else if(map==='neon') obstacleIndices.forEach((index,i)=>addBouncingBall(path[index],i*.82));
+  }
+  if (gameMode === 'laser' || map === 'ice') {
+    path.forEach((platform, i) => {
+      const pylonMat = new THREE.MeshStandardMaterial({color:0x1c4d82,emissive:0x087dff,emissiveIntensity:1.0,metalness:.45});
+      const pylonGeo = new THREE.CylinderGeometry(.12,.18,2.0,10);
+      for (const side of [-1,1]) {
+        const pylon = new THREE.Mesh(pylonGeo,pylonMat);
+        pylon.position.set(platform.x+side*(platform.width/2-.28),platform.topY+1.0,platform.z);
+        scene.add(pylon); scenery.push(pylon);
+        const light = new THREE.PointLight(0x29dfff,1.4,5);
+        light.position.copy(pylon.position); scene.add(light); scenery.push(light);
+      }
+    });
+    [1, 3, 5, 7, 9, 11, 13].forEach((index, i) => {
+      const platform = path[index];
+      const group = new THREE.Group();
+      group.position.set(platform.x, platform.topY + 0.78, platform.z);
+      const pivot = new THREE.Group(); group.add(pivot);
+      const beamMat = new THREE.MeshStandardMaterial({color:0x7df7ff,emissive:0x18cfff,emissiveIntensity:2.1,metalness:.25,roughness:.22});
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,platform.width*1.65,16),beamMat);
+      beam.rotation.z=Math.PI/2; pivot.add(beam);
+      const core = new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,platform.width*1.65,12),new THREE.MeshBasicMaterial({color:0xffffff}));
+      core.rotation.z=Math.PI/2; pivot.add(core);
+      const hub = new THREE.Mesh(new THREE.SphereGeometry(.34,18,14),new THREE.MeshStandardMaterial({color:0x143c72,emissive:0x0aaeff,emissiveIntensity:1.5,metalness:.6}));
+      group.add(hub);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(.48,.07,10,32),new THREE.MeshStandardMaterial({color:0x8ffaff,emissive:0x00bfff,emissiveIntensity:1.5}));
+      ring.rotation.x=Math.PI/2; group.add(ring);
+      scene.add(group);
+      laserBeams.push({group,pivot,phase:i*.82,time:0,hitCooldown:0,halfLength:platform.width*.78});
+    });
+  }
+
+
+
+
+  // Decorative clouds and distant floating rocks change only in color/atmosphere.
+  for (let i = 0; i < (map === 'cloud' ? 60 : 16); i++) {
+    const cloud = new THREE.Mesh(
+      new THREE.SphereGeometry(1 + Math.random() * 2.0, 18, 14),
+      new THREE.MeshStandardMaterial({
+        color: style.cloud,
+        transparent: true,
+        opacity: map === 'neon' ? 0.12 : (map === 'cloud' ? 0.34 : 0.12),
+        roughness: 1
+      })
+    );
+    cloud.scale.set(1.9, 0.56, 1.25);
+    cloud.position.set(
+      (Math.random() - 0.5) * 100,
+      Math.random() * 28 - 4,
+      -Math.random() * 180
+    );
+    scene.add(cloud);
+    decorations.push(cloud);
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1.0 + Math.random() * 1.4, 1),
+      mat(style.trim, 0.9)
+    );
+    rock.position.set((Math.random() - 0.5) * 95, -8 - Math.random() * 12, -i * 15 - 5);
+    rock.scale.set(1.4, 0.75, 1.1);
+    scene.add(rock);
+    decorations.push(rock);
+  }
+
+
+  // Four genuinely different environments around the exact same race route.
+  if (map === 'cloud') {
+    for (let i = 0; i < 8; i++) {
+      const puff = new THREE.Group();
+      for (let j = 0; j < 4; j++) {
+        const ball = new THREE.Mesh(
+          new THREE.SphereGeometry(1.8 + (j % 2) * 0.35, 18, 14),
+          mat(0xf8fdff, 0.98)
+        );
+        ball.position.set((j - 1.5) * 1.45, (j % 2) * 0.45, 0);
+        puff.add(ball);
+      }
+      puff.position.set(Math.sin(i * 1.2) * 23, -1 + (i % 3) * 1.2, -i * 22 - 8);
+      scene.add(puff); scenery.push(puff);
+    }
+  } else if (map === 'sunset') {
+    // Grass-topped floating islands over a broad blue ocean.
+    const water = new THREE.Mesh(
+      new THREE.PlaneGeometry(260, 260),
+      new THREE.MeshStandardMaterial({
+        color: 0x168bc0, roughness: 0.24, metalness: 0.18,
+        emissive: 0x063b69, emissiveIntensity: 0.28
+      })
+    );
+    water.rotation.x = -Math.PI / 2;
+    water.position.set(0, -8.5, -82);
+    scene.add(water); scenery.push(water);
+
+    for (let i = 0; i < 18; i++) {
+      const island = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.6, 2.8, 2.5, 7),
+        mat(0x79543b, 0.98)
+      );
+      island.position.set(Math.sin(i * 1.8) * 28, -5.5 + (i % 3), -i * 10 - 5);
+      island.rotation.z = (i % 2 ? 1 : -1) * 0.12;
+      scene.add(island); scenery.push(island);
+
+      const turf = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.75, 1.75, 0.35, 7),
+        mat(0x4f9e50, 0.95)
+      );
+      turf.position.set(island.position.x, island.position.y + 1.38, island.position.z);
+      scene.add(turf); scenery.push(turf);
+    }
+  } else if (map === 'ice') {
+    // Volcanic world: dark peaks, glowing lava falls, ember lights.
+    const lava = new THREE.Mesh(
+      new THREE.PlaneGeometry(260, 260),
+      new THREE.MeshStandardMaterial({
+        color: 0xff5a18, emissive: 0xc92c05,
+        emissiveIntensity: 1.15, roughness: 0.48
+      })
+    );
+    lava.rotation.x = -Math.PI / 2;
+    lava.position.set(0, -8.2, -82);
+    scene.add(lava); scenery.push(lava);
+
+    for (let i = 0; i < 14; i++) {
+      const peak = new THREE.Mesh(
+        new THREE.ConeGeometry(3.2 + (i % 3), 8 + (i % 4), 7),
+        mat(0x382522, 0.98)
+      );
+      peak.position.set(Math.sin(i * 1.3) * 25, -2.0, -i * 13 - 8);
+      scene.add(peak); scenery.push(peak);
+      const ember = new THREE.PointLight(0xff5420, 2.4, 13);
+      ember.position.set(peak.position.x, 0.5, peak.position.z);
+      scene.add(ember); scenery.push(ember);
+    }
+  } else if (map === 'neon') {
+    // Moonlit ruins: stone pillars, broken arches and blue-violet lanterns.
+    for (let i = 0; i < 12; i++) {
+      const x = Math.sin(i * 1.4) * 24;
+      const z = -i * 14 - 8;
+      const pillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.55, 0.72, 5.2, 8),
+        mat(0x777b98, 0.9)
+      );
+      pillar.position.set(x, 1.1, z);
+      scene.add(pillar); scenery.push(pillar);
+      const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(1.65, 0.35, 1.65),
+        mat(0x9ca2c0, 0.8)
+      );
+      cap.position.set(x, 3.85, z);
+      scene.add(cap); scenery.push(cap);
+      const lamp = new THREE.PointLight(0x788dff, 2.2, 11);
+      lamp.position.set(x, 4.6, z);
+      scene.add(lamp); scenery.push(lamp);
+    }
+  }
+
+  createRacer();
+  respawnPlatformIndex = 0;
+  respawnPlayer();
+  checkpointCount = 0;
+  remaining = 150;
+  document.querySelector('#worldName').textContent = infiniteMode ? 'INFINITE SKY' : ({cloud:'CLOUD KINGDOM',sunset:'VERDANT FALLS',ice:'MAGMA PEAKS',neon:'MOONLIT RUINS'})[map];
+  document.querySelector('#checkpoint').textContent = infiniteMode ? 'PLATFORM 1' : `0 / ${checkpointIndices.length}`;
+  document.querySelector('#time').textContent = infiniteMode ? '∞' : '150';
+  if(infiniteMode){infinitePlatformCount=1;infiniteNextIndex=16;infiniteLastZ=path[path.length-1].z;}
+}
+
+function extendInfiniteCourse(){
+  if(!infiniteMode || gameMode!=='race' || platforms.length===0) return;
+  const last=platforms[platforms.length-1];
+  if(player.position.z > last.z+42) return;
+  const index=infiniteNextIndex++;
+  const prev=last;
+  const x=Math.max(-4.2,Math.min(4.2,prev.x+(Math.random()-.5)*6.2));
+  const z=prev.z-10.8;
+  const y=Math.max(-.2,Math.min(3.2,prev.y+(Math.random()-.5)*.85));
+  const width=6.1+Math.random()*.9, depth=6.7+Math.random()*.6;
+  const color=worldStyles[map].platform[index%3];
+  const platform=addPlatform(index,x,y,z,width,depth,color);
+  if(infiniteMode){
+    const pattern=index%3;
+    if(pattern===0) addRollingLog(platform,index*.53);
+    else if(pattern===1) addSwingingHazard(platform,index*.71);
+    else addInfiniteLaserBar(platform,index*.4);
+  } else if(map==='cloud') addSwingingHazard(platform,index*.71);
+  else if(map==='sunset') addRollingLog(platform,index*.53);
+  else if(map==='neon') addBouncingBall(platform,index*.61);
+  else if(map==='ice') addInfiniteLaserBar(platform,index*.4);
+  infiniteLastZ=z;
+}
+function respawnPlayer() {
+  const platform = platforms[respawnPlatformIndex] || platforms[0];
+  player.position.set(platform.x, platform.topY, platform.z + 0.25);
+  velocity.set(0, 0, 0);
+  onGround = true;
+}
+
+buildWorld();
+
+addEventListener('keydown', event => {
+  const key = event.key.toLowerCase();
+  keys[key] = true;
+  if (event.code === 'Space') {
+    event.preventDefault();
+    jump();
+  }
+  if (key === 'r') { if((gameMode==='laser' && spectating)){buildWorld();start();} else if(gameMode==='hex' && !hexRoundFinished){buildWorld();start();} else if(playing) respawnPlayer(); }
+});
+addEventListener('keyup', event => {
+  keys[event.key.toLowerCase()] = false;
+});
+
+function jump() {
+  if (gameMode === 'laser' || !playing || !onGround || !player) return;
+  velocity.y = 12.6;
+  onGround = false;
+}
+
+document.querySelector('#jumpBtn').onclick = jump;
+
+function toast(message) {
+  const element = document.querySelector('#toast');
+  element.textContent = message;
+  element.style.opacity = 1;
+  clearTimeout(window.__skyToastTimer);
+  window.__skyToastTimer = setTimeout(() => element.style.opacity = 0, 1450);
+}
+
+function saveSkyProfile(){
+  const profile={name:(document.querySelector('#profileName')?.value||'Sky Racer').trim().slice(0,18)||'Sky Racer',xp:xpTotal,shirt:shirtStyle,pants:pantsStyle,hat:hatStyle,updatedAt:new Date().toISOString()};
+  try{localStorage.setItem('skyboundProfile',JSON.stringify(profile));localStorage.setItem('skyboundXP',String(xpTotal));refreshProfileStrip();const s=document.querySelector('#saveStatus');if(s)s.textContent='SAVED ON THIS DEVICE';}
+  catch(e){const s=document.querySelector('#saveStatus');if(s)s.textContent='SAVE UNAVAILABLE';}
+}
+function refreshProfileStrip(){const l=document.querySelector('#profileLevel'),x=document.querySelector('#profileXP');if(l)l.textContent=Math.floor(xpTotal/100)+1;if(x)x.textContent=xpTotal;}
+try{const p=JSON.parse(localStorage.getItem('skyboundProfile')||'{}');const n=document.querySelector('#profileName');if(n)n.value=p.name||'Sky Racer';if(p.shirt!==undefined)shirtStyle=Number(p.shirt)||0;if(p.pants!==undefined)pantsStyle=Number(p.pants)||0;if(p.hat!==undefined)hatStyle=Number(p.hat)||0;}catch(e){console.warn('Profile load issue',e);}
+document.querySelector('#profileName')?.addEventListener('change',saveSkyProfile);
+document.querySelector('#profileName')?.addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
+window.addEventListener('beforeunload',saveSkyProfile);refreshProfileStrip();
+
+
+function finishHexRound(place){
+  if(hexRoundFinished) return;
+  hexRoundFinished=true; playing=false; spectating=false;
+  const xpByPlace={1:20,2:16,3:12,4:8,5:4,6:0};
+  const earned=xpByPlace[place]||0;
+  if(earned>0){xpTotal+=earned;localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip();refreshProgressionUI();}
+  document.querySelector('#veil').classList.remove('hidden');
+  document.querySelector('#mainMenu').classList.add('hidden');
+  document.querySelector('#hexResults').classList.remove('hidden');
+  document.querySelector('#hexResultTitle').textContent=place===1?'VICTORY — 1ST PLACE!':`${place}${place===2?'ND':place===3?'RD':'TH'} PLACE`;
+  document.querySelector('#hexResultText').textContent=`You placed ${place}${place===1?'st':place===2?'nd':place===3?'rd':'th'} out of 6 and earned ${earned} XP.`;
+  document.querySelector('#message').textContent=place===1?'HEX CHAMPION!':'ROUND OVER';
+}
+document.querySelector('#hexReturnLobby').addEventListener('click',()=>{
+  document.querySelector('#hexResults').classList.add('hidden');
+  document.querySelector('#mainMenu').classList.remove('hidden');
+  document.querySelector('#veil').classList.remove('hidden');
+  document.querySelector('h1').innerHTML='SKY<span>BOUND</span><br>RACERS';
+  document.querySelector('.sub').textContent='Choose your challenge and jump into a new round.';
+  buildWorld();
+});
+
+function start() {
+  document.querySelector('#checkpoint').closest('.hudbox').classList.toggle('hidden', gameMode === 'hex');
+  if ((gameMode === 'laser' || gameMode === 'hex' || map === 'ice' || (gameMode==='race' && infiniteMode)) && platforms.length === 0) buildWorld();
+  document.querySelector('#play').disabled = false;
+  document.querySelector('#play').textContent = gameMode === 'race' ? 'START SKY RACE ↗' :
+    gameMode === 'hex' ? 'ENTER HEX SURVIVAL ↗' : 'START HIDE & SEEK ↗';
+  document.querySelector('#veil').classList.add('hidden');
+  document.querySelector('#hud').classList.remove('hidden');
+  playing = true;
+  elapsed = 0;
+  remaining = infiniteMode && gameMode==='race' ? Infinity : 150;
+  checkpointCount = 0;
+  respawnPlatformIndex = 0;
+  respawnPlayer();
+  if(gameMode==='laser'){
+    const cells=({beginner:7,easy:9,medium:11,difficult:13,hard:15})[mazeDifficulty]||7;
+    const cell=4.2, half=cells*cell/2;
+    const spawn=hideSeekRole==='seeker'?{x:-half,z:-half}:{x:half-cell,z:half-cell};
+    player.position.set(spawn.x,0,spawn.z);
+    velocity.set(0,0,0); onGround=true;
+  }
+  hexRound=1; hexRoundClock=0; hexEliminations=0; hexRoundFinished=false;
+  if(gameMode==='hex'){
+    const centerTile=hexTiles.find(t=>t.x===0 && t.z===0) || hexTiles[18];
+    if(centerTile) player.position.set(centerTile.x,centerTile.topY,centerTile.z);
+    velocity.set(0,0,0); onGround=true;
+  }
+  if(gameMode==='laser'){
+    camera.position.y = hideSeekRole==='seeker' ? 3.1 : 6.2;
+    velocity.set(0,0,0); onGround=true;
+    document.querySelector('#jumpBtn').classList.add('hidden');
+  } else document.querySelector('#jumpBtn').classList.remove('hidden');
+  document.querySelector('#checkpoint').textContent = gameMode === 'hex' ? '' : ((map === 'ice' || gameMode === 'laser') ? 'SURVIVE' : (infiniteMode ? 'PLATFORM 1' : '0 / 5'));
+  document.querySelector('#message').textContent = 'GO! GO! GO!';
+  if (gameMode === 'laser') {
+    document.querySelector('#worldName').textContent = `HIDE & SEEK • ${mazeDifficulty.toUpperCase()}`;
+    document.querySelector('#message').textContent = hideSeekRole==='seeker' ? 'FIND THE HIDERS!' : 'HIDE FROM THE SEEKER!';
+    document.querySelector('.controls').innerHTML = 'MOVE · WASD / ARROWS<br>NO JUMPING<br>DON’T GET CAUGHT!';
+    toast(hideSeekRole==='seeker'?'You are the seeker. Catch every hider!':'You are a hider. Stay away from the seeker!');
+  } else if (gameMode === 'hex') {
+    remaining=220;
+    document.querySelector('#time').textContent='220';
+    document.querySelector('#worldName').textContent='HEX SURVIVAL • LAYER 1/5';
+    document.querySelector('#checkpoint').textContent='';
+    document.querySelector('#message').textContent='KEEP MOVING • TILES WILL FALL!';
+    document.querySelector('.controls').innerHTML='MOVE · WASD / ARROWS<br>JUMP · SPACE<br>AVOID FALLING TILES<br>RESET · R';
+    toast('Hex Survival! Each tile drops after you stand on it for three seconds.');
+  } else if (gameMode === 'race') {
+    document.querySelector('#worldName').textContent = infiniteMode ? 'SKY RACE • INFINITE' : 'SKY RACE';
+    document.querySelector('#message').textContent = infiniteMode ? 'HOW FAR CAN YOU GO?' : 'REACH THE FINISH!';
+    document.querySelector('.controls').innerHTML = 'MOVE · WASD / ARROWS<br>JUMP · SPACE<br>TRAMPOLINES · AUTO-BOUNCE<br>RESET · R';
+    toast(infiniteMode?'Infinite Mode! Keep going and beat your high score.':'Sky Race started! Find the spring pads and reach the finish.');
+  } else if (gameMode === 'laser') {
+    document.querySelector('#worldName').textContent = 'MAZE RUN';
+    document.querySelector('#message').textContent = 'HIDE OR SEEK!';
+    document.querySelector('.controls').innerHTML = 'MOVE · WASD / ARROWS<br>JUMP · SPACE<br>AVOID THE ROTATING LASERS<br>RESET · R';
+    toast('Hide & Seek! Avoid the seeker or catch the hiders.');
+  } else {
+    document.querySelector('#worldName').textContent = 'HEX SURVIVAL';
+    document.querySelector('#message').textContent = '5 LAYERS • DROP THROUGH THE ARENA';
+    toast('Hex Survival! Five bots, five tile layers.');
+  }
+}
+
+document.querySelector('#exitGame').addEventListener('click', () => {
+  playing = false; elapsed=0; remaining=150; checkpointCount=0; respawnPlatformIndex=0;
+  velocity.set(0,0,0); onGround=false; spectating=false;
+  buildWorld();
+  document.querySelector('#hud').classList.add('hidden');
+  document.querySelector('#veil').classList.remove('hidden');
+  document.querySelector('#mainMenu').classList.remove('hidden');
+  document.querySelector('#roomMenu').classList.add('hidden');
+  document.querySelector('#customPanel').classList.add('hidden');
+  document.querySelector('#play').disabled = false;
+  document.querySelector('#play').textContent = gameMode === 'race' ? 'START SKY RACE ↗' : gameMode === 'hex' ? 'ENTER HEX SURVIVAL ↗' : 'START HIDE & SEEK ↗';
+  document.querySelector('h1').innerHTML = 'SKYBOUND <span>RACERS</span>';
+  document.querySelector('.sub').textContent = gameMode === 'laser'
+    ? 'Hide and seek with eight racers. Choose your difficulty and play as a hider or seeker.'
+    : gameMode === 'hex' ? 'Five stacked layers of connected hex tiles. Stand on a tile for two seconds, then drop to the next layer.'
+    : 'Race across floating worlds, clear bigger gaps, hit springy trampolines and reach the finish.';
+  toast('Back to the lobby');
+});
+
+window.startSkyRace = start;
+window.__skyReady = true;
+setTimeout(()=>document.querySelector('#launchScreen')?.classList.add('done'),350);
+if (window.__skyStartQueued) {
+  window.__skyStartQueued = false;
+  start();
+}
+document.querySelector('#play').onclick = start;
+
+document.querySelector('#room').onclick = () => {
+  document.querySelector('#mainMenu').classList.add('hidden');
+  document.querySelector('#roomMenu').classList.remove('hidden');
+};
+document.querySelector('#back').onclick = () => {
+  document.querySelector('#roomMenu').classList.add('hidden');
+  document.querySelector('#mainMenu').classList.remove('hidden');
+};
+document.querySelector('#makeRoom').onclick = () => {
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  document.querySelector('#roomCode').textContent =
+    'YOUR PREVIEW CODE: ' + code + ' · ONLINE PLAY COMING LATER';
+};
+document.querySelector('#join').onclick = () =>
+  toast('Room joining will be enabled with online multiplayer.');
+
+function finish() {
+  playing = false;
+  const earned = 75 + Math.max(0, Math.floor(remaining / 3));
+  xpTotal += earned;
+  localStorage.setItem('skyboundXP', String(xpTotal));saveSkyProfile();refreshProfileStrip();
+  refreshProgressionUI();
+  toast(`RACE COMPLETE! +${earned} XP`);
+  document.querySelector('#veil').classList.remove('hidden');
+  document.querySelector('#mainMenu').classList.remove('hidden');
+  document.querySelector('#roomMenu').classList.add('hidden');
+  document.querySelector('h1').innerHTML = 'RACE <span>FINISHED</span>';
+  document.querySelector('.sub').textContent = 'Great run! Choose a world and race again.';
+  document.querySelector('#play').textContent = 'RACE AGAIN ↗';
+}
+
+function insidePlatform(x, z, platform, margin = 0.08) {
+  if (platform.radius) return Math.hypot(x-platform.x,z-platform.z) <= platform.radius-(platform.hexTile?0:margin);
+  return Math.abs(x - platform.x) <= platform.width / 2 - margin &&
+         Math.abs(z - platform.z) <= platform.depth / 2 - margin;
+}
+
+let lastFrame = performance.now();
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastFrame) / 1000, 0.035);
+  lastFrame = now;
+
+  if (playing && player) {
+    elapsed += dt;
+    remaining = Math.max(0, (gameMode === 'hex' ? 220 : gameMode === 'laser' ? 240 : 150) - elapsed);
+    document.querySelector('#time').textContent = String(Math.ceil(remaining));
+
+    const forward = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0);
+    const sideways = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
+    const inputLength = Math.hypot(forward, sideways) || 1;
+    const maxSpeed = 5.85;
+    const desiredX = sideways / inputLength * maxSpeed;
+    const desiredZ = -forward / inputLength * maxSpeed;
+    const steering = onGround ? 13.5 : 7.0;
+
+    velocity.x += (desiredX - velocity.x) * Math.min(1, steering * dt);
+    velocity.z += (desiredZ - velocity.z) * Math.min(1, steering * dt);
+
+    const previousY = player.position.y;
+    const oldX=player.position.x, oldZ=player.position.z;
+    player.position.x += velocity.x * dt;
+    player.position.z += velocity.z * dt;
+    if(gameMode==='laser'){
+      const collides=(x,z)=>mazeWalls.some(w=>x+.30>w.x-w.w/2&&x-.30<w.x+w.w/2&&z+.30>w.z-w.d/2&&z-.30<w.z+w.d/2);
+      if(collides(player.position.x,oldZ)){player.position.x=oldX;velocity.x=0;}
+      if(collides(player.position.x,player.position.z)){player.position.z=oldZ;velocity.z=0;}
+      const limit=mazeHalfSize-.55;
+      if(Math.abs(player.position.x)>limit){player.position.x=Math.sign(player.position.x)*limit;velocity.x=0;}
+      if(Math.abs(player.position.z)>limit){player.position.z=Math.sign(player.position.z)*limit;velocity.z=0;}
+    }
+
+    if(gameMode==='laser'){
+      player.position.y=0; velocity.y=0; onGround=true;
+    } else if (onGround) {
+      const support = platforms.find(platform =>
+        Math.abs(player.position.y - platform.topY) < 0.55 &&
+        insidePlatform(player.position.x, player.position.z, platform)
+      );
+      if (support) {
+        player.position.y = support.topY;
+      } else {
+        onGround = false;
+      }
+    }
+
+    if (!onGround) {
+      velocity.y -= (gameMode === 'hex' ? 20.5 : 16.5) * dt;
+      player.position.y += velocity.y * dt;
+
+      if (velocity.y <= 0) {
+        const landing = platforms.find(platform =>
+          previousY >= platform.topY - 0.16 &&
+          player.position.y <= platform.topY &&
+          insidePlatform(player.position.x, player.position.z, platform)
+        );
+
+        if (landing) {
+          player.position.y = landing.topY;
+          velocity.y = 0;
+          onGround = true;
+
+          const spring = trampolines.find(item =>
+            item.platformIndex === landing.index &&
+            item.cooldown <= 0 &&
+            Math.hypot(player.position.x - item.x, player.position.z - item.z) < 1.38
+          );
+
+          if (spring) {
+            velocity.y = 16.0;
+            onGround = false;
+            spring.cooldown = 0.48;
+            spring.group.scale.y = 0.72;
+            toast('TRAMPOLINE BOOST!');
+          }
+        }
+      }
+    }
+
+    // Spring pads recover their shape with a soft animation.
+    for (const spring of trampolines) {
+      spring.cooldown = Math.max(0, spring.cooldown - dt);
+      spring.group.scale.y += (1 - spring.group.scale.y) * Math.min(1, 9 * dt);
+    }
+
+
+    if(gameMode==='laser' && !hideSeekFinished){
+      const speedScale={beginner:1.05,easy:1.22,medium:1.42,difficult:1.68,hard:1.95}[mazeDifficulty]||1.22;
+      const isPlayerSeeker=hideSeekRole==='seeker';
+      // Bots navigate the connected maze using shortest-path search, then move quickly.
+      const cellAt=(x,z)=>({
+        x:Math.max(0,Math.min(mazeCellCount-1,Math.round((x+mazeHalfSize)/mazeCellSize))),
+        z:Math.max(0,Math.min(mazeCellCount-1,Math.round((z+mazeHalfSize)/mazeCellSize)))
+      });
+      const key=(x,z)=>`${x},${z}`;
+      const edge=(x,z,nx,nz)=>`${Math.min(x,nx)},${Math.min(z,nz)}:${Math.max(x,nx)},${Math.max(z,nz)}`;
+      const neighbors=(x,z)=>[[x+1,z],[x-1,z],[x,z+1],[x,z-1]]
+        .filter(([nx,nz])=>nx>=0&&nz>=0&&nx<mazeCellCount&&nz<mazeCellCount&&mazeOpenEdges.has(edge(x,z,nx,nz)));
+      const routeStep=(from,to,flee=false,flock=null)=>{
+        const queue=[[from.x,from.z]], prev=new Map([[key(from.x,from.z),null]]);
+        let goal=null;
+        while(queue.length){
+          const cur=queue.shift();
+          if(cur[0]===to.x&&cur[1]===to.z){goal=cur;break;}
+          for(const n of neighbors(cur[0],cur[1])){
+            const k=key(n[0],n[1]); if(!prev.has(k)){prev.set(k,cur);queue.push(n);}
+          }
+        }
+        if(!goal) return neighbors(from.x,from.z)[Math.floor(Math.random()*Math.max(1,neighbors(from.x,from.z).length))]||[from.x,from.z];
+        let cur=goal, parent=prev.get(key(cur[0],cur[1]));
+        while(parent && !(parent[0]===from.x&&parent[1]===from.z)){cur=parent;parent=prev.get(key(cur[0],cur[1]));}
+        if(!parent) return [from.x,from.z];
+        if(flee){
+          const opts=neighbors(from.x,from.z);
+          return opts.sort((a,b)=>{
+            const score=(cell)=>{
+              const away=Math.hypot(cell[0]-to.x,cell[1]-to.z);
+              const together=flock?Math.hypot(cell[0]-flock.x,cell[1]-flock.z):0;
+              return away*1.35-together*0.48+Math.random()*0.22;
+            };
+            return score(b)-score(a);
+          })[0]||[from.x,from.z];
+        }
+        return cur;
+      };
+      for(const bot of hideSeekBots){
+        if(!bot.alive) continue;
+        bot.think-=dt;
+        const from=cellAt(bot.group.position.x,bot.group.position.z);
+        if(bot.think<=0){
+          let target, flee=false;
+          if(bot.isSeeker){
+            // Always pursue the nearest living hider, whether human or AI.
+            const candidates=hideSeekBots.filter(other=>other.alive&&!other.isSeeker);
+            if(!isPlayerSeeker && !hideSeekPlayerTagged){
+              candidates.push({group:player,isPlayer:true});
+            }
+            if(candidates.length){
+              let nearest=candidates[0],nearestDistance=Infinity;
+              for(const candidate of candidates){
+                const d=Math.hypot(candidate.group.position.x-bot.group.position.x,
+                                   candidate.group.position.z-bot.group.position.z);
+                if(d<nearestDistance){nearestDistance=d;nearest=candidate;}
+              }
+              target=cellAt(nearest.group.position.x,nearest.group.position.z);
+            } else target=from;
+          } else {
+            // Hiders flee the active seeker, whether controlled by the player or a bot.
+            let seekerPos=null;
+            if(isPlayerSeeker) seekerPos=player.position;
+            else {
+              const seeker=hideSeekBots.find(other=>other.alive&&other.isSeeker);
+              if(seeker) seekerPos=seeker.group.position;
+            }
+            if(seekerPos){
+              target=cellAt(seekerPos.x,seekerPos.z);
+              flee=true;
+            } else {
+              target={x:Math.floor(Math.random()*mazeCellCount),z:Math.floor(Math.random()*mazeCellCount)};
+            }
+          }
+          let flock=null;
+          if(flee && isPlayerSeeker){
+            const pack=hideSeekBots.filter(other=>other.alive&&!other.isSeeker);
+            if(pack.length){
+              const center=pack.reduce((sum,other)=>({
+                x:sum.x+other.group.position.x,
+                z:sum.z+other.group.position.z
+              }),{x:0,z:0});
+              flock={
+                x:Math.max(0,Math.min(mazeCellCount-1,Math.round((center.x/pack.length+mazeHalfSize)/mazeCellSize))),
+                z:Math.max(0,Math.min(mazeCellCount-1,Math.round((center.z/pack.length+mazeHalfSize)/mazeCellSize)))
+              };
+            }
+          }
+          const next=routeStep(from,target,flee,flock);
+          bot.tx=-mazeHalfSize+next[0]*mazeCellSize;
+          bot.tz=-mazeHalfSize+next[1]*mazeCellSize;
+          bot.think=.55+Math.random()*.55;
+        }
+        const dx=bot.tx-bot.group.position.x,dz=bot.tz-bot.group.position.z,len=Math.hypot(dx,dz);
+        const roleSpeed=bot.isSeeker?1.08:1.18;
+        // In player-seeker rounds, AI hiders are deliberately slower than the
+        // player's 5.85 movement speed, but smarter path choices make them harder
+        // to corner. Other role combinations retain their existing balance.
+        const movementSpeed=(isPlayerSeeker && !bot.isSeeker)
+          ? Math.min(5.05, bot.speed*0.79) * Math.min(1.08, speedScale)
+          : bot.speed*speedScale*roleSpeed;
+        const step=Math.min(len,movementSpeed*dt);
+        if(len>.04) bot.group.position.set(bot.group.position.x+dx/len*step,0,bot.group.position.z+dz/len*step);
+        bot.group.rotation.y=Math.atan2(dx,dz);
+      }
+      const seekerBots=hideSeekBots.filter(b=>b.alive&&b.isSeeker);
+      const hiderBots=hideSeekBots.filter(b=>b.alive&&!b.isSeeker);
+
+      // Bot seekers must tag bot hiders too, not just chase them.
+      // Check after movement so a seeker that reaches a hider actually catches them.
+      for(const seeker of seekerBots){
+        for(const hider of hiderBots){
+          if(!hider.alive) continue;
+          const distance=Math.hypot(
+            seeker.group.position.x-hider.group.position.x,
+            seeker.group.position.z-hider.group.position.z
+          );
+          if(distance<.82){
+            hider.alive=false;
+            scene.remove(hider.group);
+            hideSeekCaught++;
+            hideSeekTagOrder++;
+            hider.place=8-hideSeekTagOrder;
+            toast('BOT HIDER CAUGHT!');
+          }
+        }
+      }
+
+      if(!isPlayerSeeker){
+        const caught=seekerBots.some(b=>Math.hypot(b.group.position.x-player.position.x,b.group.position.z-player.position.z)<.68);
+        if(caught && !hideSeekPlayerTagged){
+          hideSeekPlayerTagged=true;
+          hideSeekPlayerPlace=8-hideSeekTagOrder;
+          hideSeekTagOrder++;
+          spectating=true;
+          player.visible=false;
+          const xpByPlace={1:20,2:16,3:12,4:8,5:4,6:2,7:1,8:0};
+          const earned=xpByPlace[hideSeekPlayerPlace]||0;
+          if(earned){xpTotal+=earned;localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip();refreshProgressionUI();}
+          document.querySelector('#message').textContent=`TAGGED • ${earned} XP • SPECTATING`;
+          toast(`You were tagged in place ${hideSeekPlayerPlace}. Keep watching!`);
+        }
+      } else {
+        for(const bot of hiderBots){
+          if(bot.alive&&Math.hypot(bot.group.position.x-player.position.x,bot.group.position.z-player.position.z)<.72){
+            bot.alive=false; scene.remove(bot.group); hideSeekCaught++; hideSeekTagOrder++;
+            bot.place=8-hideSeekTagOrder;
+            toast('HIDER CAUGHT!');
+          }
+        }
+      }
+      if(isPlayerSeeker && hiderBots.every(b=>!b.alive) && !hideSeekFinished){
+        hideSeekFinished=true; playing=false;
+        const earned=20; xpTotal+=earned; localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip(); refreshProgressionUI();
+        document.querySelector('#message').textContent='ALL HIDERS CAUGHT! +20 XP';
+        toast('You caught every hider! +20 XP');
+      }
+      if(!isPlayerSeeker && hiderBots.every(b=>!b.alive) && hideSeekPlayerTagged && !hideSeekFinished){
+        hideSeekFinished=true; playing=false;
+        document.querySelector('#message').textContent='ALL HIDERS TAGGED!';
+      }
+    }
+
+    if(gameMode==='hex'){
+      const layerHeight=3.7;
+      const currentLayer=Math.max(0,Math.min(4,Math.floor(Math.max(0,.26-player.position.y)/layerHeight+.35)));
+      document.querySelector('#worldName').textContent=`HEX SURVIVAL • LAYER ${currentLayer+1}/5`;
+      document.querySelector('#checkpoint').textContent='';
+      // Any racer standing on a tile (player OR bot) starts its two-second countdown.
+      // The timer pauses when the tile is empty and resumes with its remaining time.
+      for(const tile of hexTiles){
+        if(!tile.active) continue;
+        const playerOnTile =
+          Math.abs(player.position.y-tile.topY)<.72 &&
+          Math.hypot(player.position.x-tile.x,player.position.z-tile.z)<1.92;
+        const botOnTile = hexBots.some(bot =>
+          Math.abs(bot.group.position.y-tile.topY)<.9 &&
+          Math.hypot(bot.group.position.x-tile.x,bot.group.position.z-tile.z)<1.92
+        );
+        const occupied = playerOnTile || botOnTile;
+
+        if(occupied){
+          if(tile.standStarted===undefined) tile.standStarted=elapsed-(tile.pausedElapsed||0);
+          const left=Math.max(0,2-Math.floor(elapsed-tile.standStarted));
+          if(!tile.countdownSprite){
+            const canvas=document.createElement('canvas');
+            canvas.width=256; canvas.height=128;
+            const ctx=canvas.getContext('2d');
+            ctx.clearRect(0,0,256,128);
+            ctx.fillStyle='rgba(12,20,45,.86)';
+            ctx.beginPath(); ctx.roundRect(18,12,220,104,24); ctx.fill();
+            ctx.strokeStyle='#ffffff'; ctx.lineWidth=6; ctx.stroke();
+            const texture=new THREE.CanvasTexture(canvas);
+            const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false}));
+            sprite.scale.set(1.55,.78,1);
+            sprite.position.set(tile.x,tile.topY+1.45,tile.z);
+            scene.add(sprite);
+            tile.countdownCanvas=canvas; tile.countdownContext=ctx; tile.countdownSprite=sprite;
+          }
+          tile.countdownSprite.visible=true;
+          tile.mesh.material.emissive.setHex(0x3b315c);
+          tile.countdownSprite.position.set(tile.x,tile.topY+1.45,tile.z);
+          const ctx=tile.countdownContext;
+          ctx.clearRect(0,0,256,128);
+          ctx.fillStyle='rgba(12,20,45,.9)';
+          ctx.beginPath(); ctx.roundRect(18,12,220,104,24); ctx.fill();
+          ctx.strokeStyle='#ffffff'; ctx.lineWidth=6; ctx.stroke();
+          ctx.fillStyle='#ffffff'; ctx.font='bold 76px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(left>0?String(left):'DROP',128,67);
+          tile.countdownSprite.material.map.needsUpdate=true;
+
+          if(left===0){
+            tile.active=false;
+            tile.mesh.visible=false;
+            tile.countdownSprite.visible=false;
+            platforms=platforms.filter(p=>p.hexTile!==tile);
+          }
+        } else if(tile.standStarted!==undefined){
+          tile.pausedElapsed=(tile.pausedElapsed||0)+(elapsed-tile.standStarted);
+          tile.standStarted=undefined;
+          tile.countdownShown=2;
+          if(tile.countdownSprite) tile.countdownSprite.visible=false;
+          tile.mesh.material.color.setHex([0x4b9de0,0x55b9a7,0x9b85df,0xe29b54,0xe36f79][tile.layer]);
+          tile.mesh.material.emissive.setHex(0x102c66);
+        }
+      }
+      // Bots move across their current layer, then fall naturally when their tile vanishes.
+      for(const bot of hexBots){
+        bot.angle += bot.speed*dt/Math.max(3,bot.radius);
+        const nextX=Math.cos(bot.angle)*bot.radius;
+        const nextZ=Math.sin(bot.angle)*bot.radius;
+        bot.group.position.x=nextX;
+        bot.group.position.z=nextZ;
+        if(bot.hexFallVelocity===undefined) bot.hexFallVelocity=0;
+        bot.hexFallVelocity -= 20.5*dt;
+        bot.group.position.y += bot.hexFallVelocity*dt;
+
+        const support=hexTiles.find(t=>t.active &&
+          bot.group.position.y<=t.topY+1.0 &&
+          bot.group.position.y>=t.topY-.5 &&
+          Math.hypot(bot.group.position.x-t.x,bot.group.position.z-t.z)<1.82);
+        if(support && bot.hexFallVelocity<0){
+          bot.group.position.y=support.topY;
+          bot.hexFallVelocity=0;
+          bot.layer=support.layer;
+        }
+        bot.hopClock-=dt;
+        if(bot.hopClock<=0 && bot.hexFallVelocity===0){
+          bot.hexFallVelocity=7.0;
+          bot.hopClock=1.5+Math.random()*1.1;
+        }
+        bot.group.rotation.y=-bot.angle;
+      }
+      // Remove bots only after they fall below the bottom layer; award places in order.
+      for(let i=hexBots.length-1;i>=0;i--){
+        const bot=hexBots[i];
+        if(bot.group.position.y < .26-4*layerHeight-3.0){
+          scene.remove(bot.group);
+          hexBots.splice(i,1);
+          hexEliminations++;
+          toast(`${6-hexEliminations}${6-hexEliminations===2?'ND':6-hexEliminations===3?'RD':'TH'} PLACE — BOT ELIMINATED`);
+        }
+      }
+      if(player.position.y < (.26-4*layerHeight)-3.6){
+        finishHexRound(Math.max(1,6-hexEliminations));
+      } else if(hexBots.length===0){
+        finishHexRound(1);
+      } else if(elapsed>=220){
+        // If time runs out, rank the player by how many bots have already fallen.
+        finishHexRound(Math.max(1,6-hexEliminations));
+      }
+    }
+
+    for (const laser of laserBeams) {
+      laser.hitCooldown = Math.max(0, laser.hitCooldown - dt);
+      if (laser.spokes) {
+        laser.time = (laser.time || 0) + dt;
+        const expansion = Math.min(1, laser.time / 9);
+        laser.length = 2.0 + expansion * (laser.radius - 2.0);
+        laser.rotationSpeed = .48 + Math.min(1.0, elapsed / 95) * 1.05;
+        laser.group.rotation.y += dt * laser.rotationSpeed;
+        for (const item of laser.spokes) {
+          item.beam.scale.y = laser.length;
+          item.core.scale.y = laser.length;
+          item.beam.position.x = laser.length/2 + .45;
+          item.core.position.x = laser.length/2 + .45;
+        }
+        const dx=player.position.x-laser.group.position.x;
+        const dz=player.position.z-laser.group.position.z;
+        const radiusFromHub=Math.hypot(dx,dz);
+        const playerAngle=Math.atan2(dz,dx);
+        let crossed=false;
+        for(let s=0;s<3;s++){
+          const beamAngle=laser.group.rotation.y+s*Math.PI*2/3;
+          let delta=Math.atan2(Math.sin(playerAngle-beamAngle),Math.cos(playerAngle-beamAngle));
+          const perpendicular=Math.abs(Math.sin(delta)*radiusFromHub);
+          const along=Math.cos(delta)*radiusFromHub;
+          if(along>.8 && along<laser.length+.7 && perpendicular<.68){crossed=true;break;}
+        }
+        const verticalGap=Math.abs((player.position.y+.58)-laser.group.position.y);
+        if(crossed && verticalGap<1.05){
+          laser.hitCooldown=999;
+          playing=false; spectating=true; spectatorTarget=0;
+          toast('YOU WERE TAGGED! Press R to race again.');
+          document.querySelector('#message').textContent='SPECTATING • FIVE RACERS LEFT';
+        }
+      } else {
+        laser.time = (laser.time || 0) + dt;
+        laser.pivot.rotation.y = Math.sin(laser.time * 1.25 + laser.phase) * 1.15;
+        // Pad-mounted lasers on Magma Peaks rotate and physically tag the racer.
+        laser.group.updateMatrixWorld(true);
+        const localPlayer=laser.pivot.worldToLocal(player.position.clone());
+        const touching=Math.abs(localPlayer.x)<laser.halfLength && Math.abs(localPlayer.z)<.62;
+        const height=Math.abs((player.position.y+.62)-laser.group.position.y)<.82;
+        if((map==='ice' || laser.infiniteBar) && laser.hitCooldown<=0 && touching && height){
+          laser.hitCooldown=1.05;
+          if(infiniteMode && gameMode==='race'){
+            playing=false;
+            document.querySelector('#message').textContent=`RUN ENDED • ${infinitePlatformCount} PLATFORMS`;
+            toast(`Laser hit! You reached ${infinitePlatformCount} platforms.`);
+          } else {
+            respawnPlayer(); toast('LASER HIT! JUMP OVER THE BEAM!');
+            document.querySelector('#message').textContent='WATCH THE LASERS!';
+          }
+        }
+      }
+    }
+
+    // Five laser-mode bots keep running around the raft and turn away from incoming beams.
+    if(gameMode==='laser' && laserBots.length){
+      const arenaRadius=platforms[0]?.radius || 12.6;
+      for(const bot of laserBots){
+        let desired=bot.speed;
+        const bx=bot.group.position.x, bz=bot.group.position.z;
+        for(const laser of laserBeams){
+          if(!laser.spokes) continue;
+          const r=Math.hypot(bx,bz), a=Math.atan2(bz,bx);
+          for(let k=0;k<3;k++){
+            const beamA=laser.group.rotation.y+k*Math.PI*2/3;
+            const delta=Math.atan2(Math.sin(a-beamA),Math.cos(a-beamA));
+            const side=Math.abs(Math.sin(delta)*r);
+            const along=Math.cos(delta)*r;
+            if(along>.5 && along<laser.length+1 && side<1.65){
+              desired=bot.speed>=0?Math.abs(bot.speed)*1.55:-Math.abs(bot.speed)*1.55;
+              bot.turn=1.0;
+              bot.hop=Math.max(bot.hop,.9);
+              bot.hopClock=.55;
+              bot.radius=Math.min(arenaRadius-1.4,bot.radius+.35);
+            }
+          }
+        }
+        if(bot.turn>0) bot.turn=Math.max(0,bot.turn-dt);
+        else if(Math.random()<dt*.45) desired*=-1;
+        bot.speed+=(desired-bot.speed)*Math.min(1,2.2*dt);
+        bot.angle+=bot.speed*dt/Math.max(4,bot.radius);
+        bot.radius+=Math.sin(elapsed*.8+bot.angle*2)*dt*.18;
+        bot.radius=Math.max(4.5,Math.min(arenaRadius-1.3,bot.radius));
+        bot.hop=Math.max(0,(bot.hop||0)-dt*2.0);
+        bot.group.position.set(Math.cos(bot.angle)*bot.radius,.42+bot.hop,Math.sin(bot.angle)*bot.radius);
+        bot.group.rotation.y=-bot.angle;
+      }
+    }
+
+    // Large overhead axes sweep across the upper surface of each platform.
+    for (const hazard of hazards) {
+      hazard.time += dt;
+      hazard.hitCooldown = Math.max(0, hazard.hitCooldown - dt);
+      const swing = Math.sin(hazard.time * 1.95 + hazard.phase) * 0.92;
+      hazard.pivot.rotation.z = swing;
+      hazard.group.updateMatrixWorld(true);
+      const bladeWorld = hazard.pivot.localToWorld(hazard.localBladePoint.clone());
+      const dx = player.position.x - bladeWorld.x;
+      const dz = player.position.z - bladeWorld.z;
+      const dy = player.position.y + 0.75 - bladeWorld.y;
+
+      if (hazard.hitCooldown <= 0 &&
+          Math.hypot(dx, dz) < 1.55 &&
+          Math.abs(dy) < 1.35) {
+        hazard.hitCooldown = 1.0;
+        if(infiniteMode && gameMode==='race'){
+          playing=false;
+          document.querySelector('#message').textContent=`RUN ENDED • ${infinitePlatformCount} PLATFORMS`;
+          toast(`Axe hit! You reached ${infinitePlatformCount} platforms.`);
+        } else {
+          respawnPlayer();
+          toast('HIT BY THE SWINGING AXE! CHECKPOINT RESET!');
+          document.querySelector('#message').textContent = 'WATCH THE AXE!';
+        }
+      }
+    }
+
+    if(infiniteMode && gameMode==='race'){
+      const current=platforms.reduce((best,p)=>Math.abs(player.position.z-p.z)<Math.abs(player.position.z-best.z)?p:best,platforms[0]);
+      infinitePlatformCount=Math.max(infinitePlatformCount,current.index+1);
+      document.querySelector('#checkpoint').textContent=`PLATFORM ${infinitePlatformCount}`;
+      if(infinitePlatformCount>infiniteHighScore){
+        infiniteHighScore=infinitePlatformCount;
+        localStorage.setItem('skyboundInfiniteHighScore',String(infiniteHighScore));
+        refreshInfiniteScore();
+      }
+      extendInfiniteCourse();
+    }
+
+    for(const log of rollingLogs){
+      log.time+=dt;
+      log.hitCooldown=Math.max(0,log.hitCooldown-dt);
+      const travel=Math.sin(log.time*1.45+log.phase)*log.travel;
+      log.group.position.z=log.baseZ+travel;
+      log.group.rotation.x+=dt*2.9;
+      if(log.hitCooldown<=0 && Math.abs(player.position.z-log.group.position.z)<1.05 &&
+         Math.abs(player.position.x-log.group.position.x)<log.platform.width*.46 &&
+         Math.abs(player.position.y+.55-log.group.position.y)<1.35){
+        log.hitCooldown=1.15;
+        if(infiniteMode && gameMode==='race'){
+          playing=false;
+          document.querySelector('#message').textContent=`RUN ENDED • ${infinitePlatformCount} PLATFORMS`;
+          toast(`Run over! You reached ${infinitePlatformCount} platforms.`);
+        } else {
+          respawnPlayer(); toast('THE ROLLING LOG HIT YOU! CHECKPOINT RESET!');
+        }
+      }
+    }
+
+    for(const hazard of bouncingBalls){
+      hazard.time+=dt;
+      hazard.hitCooldown=Math.max(0,hazard.hitCooldown-dt);
+      const bounce=(1-Math.cos(hazard.time*1.35+hazard.phase))/2;
+      hazard.ball.position.y=hazard.baseY+bounce*5.3;
+      hazard.ball.rotation.x+=dt*.35;
+      hazard.group.children[2].position.y=hazard.ball.position.y;
+      const dx=player.position.x-hazard.group.position.x;
+      const dz=player.position.z-hazard.group.position.z;
+      const dy=player.position.y+.65-(hazard.group.position.y+hazard.ball.position.y);
+      if(hazard.hitCooldown<=0 && Math.hypot(dx,dz)<hazard.radius+.12 && Math.abs(dy)<hazard.radius+.25){
+        hazard.hitCooldown=1.1;
+        if(infiniteMode && gameMode==='race'){
+          playing=false;
+          document.querySelector('#message').textContent=`RUN ENDED • ${infinitePlatformCount} PLATFORMS`;
+          toast(`Bouncing ball hit you! You reached ${infinitePlatformCount} platforms.`);
+        } else {
+          respawnPlayer(); toast('WATCH THE BOUNCING BALL! CHECKPOINT RESET!');
+        }
+      }
+    }
+
+    // Rings also act as checkpoints. Falling back to a checkpoint is less frustrating.
+    for (let i = checkpointCount; !infiniteMode && i < checkpoints.length; i++) {
+      const ring = checkpoints[i];
+      if (Math.hypot(player.position.x - ring.position.x, player.position.z - ring.position.z) < 2.15 &&
+          Math.abs(player.position.y + 0.9 - ring.position.y) < 2.8) {
+        checkpointCount = i + 1;
+        const platformForCheckpoint = [2, 5, 8, 11, 15][i];
+        respawnPlatformIndex = platformForCheckpoint;
+        document.querySelector('#checkpoint').textContent = `${checkpointCount} / 5`;
+        if (ring.userData.isFinish) {
+          finish();
+        } else {
+          toast(`CHECKPOINT ${checkpointCount}!`);
+        }
+        break;
+      }
+    }
+
+    // Standard race maps use checkpoint respawns; Hex Survival must fall through
+    // every layer and is eliminated only below the fifth layer.
+    if(gameMode==='race' && infiniteMode && player.position.y < -12){
+      playing=false;
+      document.querySelector('#message').textContent=`RUN ENDED • ${infinitePlatformCount} PLATFORMS`;
+      toast(`You fell! You reached ${infinitePlatformCount} platforms.`);
+    } else if (gameMode !== 'hex' && player.position.y < -12) {
+      respawnPlayer();
+      toast('Back to your last checkpoint!');
+    }
+
+    playerVisual.rotation.z += (-velocity.x * 0.035 - playerVisual.rotation.z) * Math.min(1, 7 * dt);
+    playerVisual.rotation.x += (velocity.z * 0.012 - playerVisual.rotation.x) * Math.min(1, 5 * dt);
+
+    const cameraTarget = new THREE.Vector3(
+      player.position.x * 0.52,
+      player.position.y + 7.3,
+      player.position.z + 13.5
+    );
+    camera.position.lerp(cameraTarget, 1 - Math.pow(0.001, dt));
+    camera.lookAt(player.position.x, player.position.y + 0.8, player.position.z - 4.2);
+
+    if (!infiniteMode && remaining <= 0) {
+      playing = false;
+      if(gameMode==='laser'){
+        hideSeekFinished=true;
+        if(hideSeekRole==='hider' && !hideSeekPlayerTagged){
+          const earned=20; xpTotal+=earned; localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip(); refreshProgressionUI();
+          document.querySelector('#message').textContent='YOU SURVIVED! +20 XP';
+          toast('Time is up! You win +20 XP');
+        } else if(hideSeekRole==='seeker'){
+          const earned=hideSeekCaught>0?8:2; xpTotal+=earned; localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip(); refreshProgressionUI();
+          document.querySelector('#message').textContent=`TIME UP • +${earned} XP`;
+        } else {
+          document.querySelector('#message').textContent='ROUND OVER • SPECTATING';
+        }
+      } else if (map === 'ice') {
+        const earned=100;
+        xpTotal+=earned; localStorage.setItem('skyboundXP',String(xpTotal));saveSkyProfile();refreshProfileStrip();
+        refreshProgressionUI();
+        toast(`YOU SURVIVED THE LASER RAFT! +${earned} XP`);
+        document.querySelector('#message').textContent='ARENA SURVIVED!';
+      } else {
+        toast('TIME UP! Press R to retry from your checkpoint.');
+        document.querySelector('#message').textContent = 'TIME UP';
+      }
+    }
+  }
+
+  // Gentle floating motion keeps the scenery alive without changing course difficulty.
+  const floatTime = now * 0.00035;
+  decorations.forEach((object, index) => {
+    object.position.y += Math.sin(floatTime + index) * 0.0008;
+  });
+
+  if(spectating && gameMode==='laser' && laserBots.length){
+    elapsed+=dt;
+    for(const laser of laserBeams){
+      if(!laser.spokes) continue;
+      laser.time=(laser.time||0)+dt;
+      const expansion=Math.min(1,laser.time/9);
+      laser.length=2.0+expansion*(laser.radius-2.0);
+      laser.rotationSpeed=.48+Math.min(1.0,elapsed/95)*1.05;
+      laser.group.rotation.y+=dt*laser.rotationSpeed;
+      for(const item of laser.spokes){
+        item.beam.scale.y=laser.length; item.core.scale.y=laser.length;
+        item.beam.position.x=laser.length/2+.45; item.core.position.x=laser.length/2+.45;
+      }
+    }
+    for(const bot of laserBots){
+      let desired=bot.speed;
+      const bx=bot.group.position.x,bz=bot.group.position.z;
+      for(const laser of laserBeams){
+        if(!laser.spokes) continue;
+        const radius=Math.hypot(bx,bz),angle=Math.atan2(bz,bx);
+        for(let k=0;k<3;k++){
+          const beamAngle=laser.group.rotation.y+k*Math.PI*2/3;
+          const delta=Math.atan2(Math.sin(angle-beamAngle),Math.cos(angle-beamAngle));
+          if(Math.cos(delta)*radius>.5 && Math.abs(Math.sin(delta)*radius)<1.7){
+            desired=bot.speed>=0?-Math.abs(bot.speed)*1.55:Math.abs(bot.speed)*1.55;
+            bot.hop=Math.max(bot.hop||0,.9);
+            bot.radius=Math.min(11.1,bot.radius+.3);
+          }
+        }
+      }
+      bot.speed+=(desired-bot.speed)*Math.min(1,2.4*dt);
+      bot.angle+=bot.speed*dt/Math.max(4,bot.radius);
+      bot.hop=Math.max(0,(bot.hop||0)-dt*2.0);
+      bot.group.position.set(Math.cos(bot.angle)*bot.radius,.42+bot.hop,Math.sin(bot.angle)*bot.radius);
+      bot.group.rotation.y=-bot.angle;
+    }
+    const bot=laserBots[spectatorTarget%laserBots.length];
+    const target=bot.group.position;
+    const desiredCamera=new THREE.Vector3(target.x+7,target.y+6,target.z+9);
+    camera.position.lerp(desiredCamera,.045);
+    camera.lookAt(target.x,target.y+1,target.z);
+    if(Math.random()<dt*.22) spectatorTarget=(spectatorTarget+1)%laserBots.length;
+  }
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script></body></html>

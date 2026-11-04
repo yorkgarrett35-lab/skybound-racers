@@ -57,12 +57,13 @@ h1{font-size:clamp(42px,8vw,82px);line-height:.9;margin:28px 0 12px;letter-spaci
 .launchTrack{height:8px;border-radius:20px;background:#06182c;overflow:hidden}.launchTrack i{display:block;width:0;height:100%;background:linear-gradient(90deg,#59dfff,#ffe39a);animation:launchFill 1.35s ease forwards}@keyframes launchFill{to{width:100%}}
 .profileStrip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:11px 13px;border-radius:14px;background:#06172c99;border:1px solid #b7e8ff33}
 .profileStrip input{min-width:120px;flex:1;background:#07182c;color:white;border:1px solid #b7e8ff55;border-radius:9px;padding:9px 11px}.profileStat{font-size:11px;color:#c7e6f8;white-space:nowrap}.profileStat b{color:var(--gold)}.saveNote{font-size:10px;color:#91b5cf}
+#accountPanel{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:#020b19dd;backdrop-filter:blur(9px);padding:18px}#accountPanel.open{display:grid}#accountCard{width:min(440px,96vw);padding:24px;border-radius:22px;border:1px solid #a9eaff66;background:linear-gradient(145deg,#102d4d,#07182d);box-shadow:0 24px 80px #000b}#accountCard input{width:100%;margin:6px 0 12px;padding:12px;border-radius:10px;border:1px solid #9edbff55;background:#06172c;color:white}#accountMessage{min-height:34px;color:#ffe39a;font-size:12px;line-height:1.5}#accountActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 #maps .map:disabled{opacity:.48;filter:saturate(.65);cursor:not-allowed;pointer-events:none}#infiniteModeToggle.active{border-color:#75e7ff;background:linear-gradient(135deg,#123b58,#174a65);box-shadow:0 0 0 2px #62dfff33 inset}#infiniteModeToggle small{display:block;margin-top:5px;color:#a9d9ed}</style></head><body>
 <div id="game"></div>
 <div id="veil"><div class="panel">
 <div class="top"><div class="brand">A HIGH-ALTITUDE ARCADE</div><div class="pill">SOLO COURSE • SAME DIFFICULTY ON EVERY MAP</div></div>
 <div id="hexResults" class="hidden content"><h1 id="hexResultTitle">VICTORY!</h1><p class="sub" id="hexResultText"></p><div class="actions"><button class="btn" id="hexReturnLobby">RETURN TO LOBBY ↗</button></div></div>
-<div class="profileStrip" id="profileStrip"><span style="font-size:22px">👤</span><input id="profileName" maxlength="18" aria-label="Racer name" placeholder="Enter racer name"><span class="profileStat">LEVEL <b id="profileLevel">1</b></span><span class="profileStat">XP <b id="profileXP">0</b></span><span class="saveNote" id="saveStatus">SAVES ON THIS DEVICE</span></div>
+<div class="profileStrip" id="profileStrip"><span style="font-size:22px">👤</span><input id="profileName" maxlength="18" aria-label="Racer name" placeholder="Enter racer name"><span class="profileStat">LEVEL <b id="profileLevel">1</b></span><span class="profileStat">XP <b id="profileXP">0</b></span><span class="saveNote" id="saveStatus">SAVES ON THIS DEVICE</span><button class="btn secondary" id="accountButton" type="button" style="padding:9px 12px;font-size:10px">ACCOUNT / CLOUD SAVE</button></div>
 <div id="mainMenu" class="content">
 <div><h1>SKY<span>BOUND</span><br>RACERS</h1><p class="sub">Choose your challenge: race the floating worlds, survive the eight-stage hex arena, or dodge sweeping energy beams.</p>
 <div class="label" style="margin-top:18px">CHOOSE YOUR GAME MODE</div>
@@ -103,6 +104,7 @@ h1{font-size:clamp(42px,8vw,82px);line-height:.9;margin:28px 0 12px;letter-spaci
 </div>
 <div id="roomMenu" class="hidden content"><div><h1>RACE <span>ROOM</span></h1><p class="sub">Private rooms will let friends race together when online play is added. For now, you can preview the room-code flow.</p><div class="actions"><button class="btn" id="makeRoom">GENERATE ROOM CODE</button><button class="btn secondary" id="back">BACK</button></div><div id="roomCode" class="hint"></div></div><div class="section"><div class="label">JOIN A ROOM</div><input id="codeInput" placeholder="ENTER CODE" maxlength="6" style="width:100%;padding:15px;border-radius:12px;background:#07182c;color:white;border:1px solid #b7e8ff55;letter-spacing:.2em"><p class="hint">Joining is a visual preview only. No internet connection or multiplayer server is active yet.</p><button class="btn secondary" id="join">JOIN PREVIEW</button></div></div>
 </div></div>
+<div id="accountPanel" aria-hidden="true"><div id="accountCard"><div class="brand">SKYBOUND ACCOUNT</div><h2 id="accountTitle" style="margin:12px 0">SAVE YOUR PROGRESS ONLINE</h2><p class="hint">Create an account or sign in with your username and 6-digit PIN. Your progress can then sync across devices.</p><label class="label" for="accountUsername">USERNAME</label><input id="accountUsername" maxlength="16" autocomplete="username" placeholder="3–16 letters, numbers, underscores"><label class="label" for="accountPin">6-DIGIT PIN</label><input id="accountPin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 digits"><div id="recoveryField" class="hidden"><label class="label" for="accountRecovery">RECOVERY CODE</label><input id="accountRecovery" autocomplete="off" placeholder="Your saved recovery code"><label class="label" for="newAccountPin">NEW 6-DIGIT PIN</label><input id="newAccountPin" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN"></div><div id="accountMessage" role="status"></div><div id="accountActions"><button class="btn" id="registerAccount" type="button">CREATE ACCOUNT</button><button class="btn secondary" id="loginAccount" type="button">LOG IN</button><button class="btn secondary" id="recoverAccount" type="button">RECOVER PIN</button><button class="btn secondary" id="closeAccount" type="button">CLOSE</button></div></div></div>
 <div id="customPanel" class="hidden" style="position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#041226bb;backdrop-filter:blur(8px)">
   <div class="workshop">
     <div class="racerPreview"><div class="humanPreview"><div class="hp-hat" id="previewHat"></div><div class="hp-head"></div><div class="hp-body" id="previewShirt"></div><div class="hp-arm left"></div><div class="hp-arm right"></div><div class="hp-leg left"></div><div class="hp-leg right"></div></div><div class="previewTag">YOUR SKYBOUND RACER</div></div>
@@ -166,6 +168,82 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Public project URL and publishable key. Never put a Supabase secret/service-role key here.
+const SKY_SUPABASE_URL = 'https://puvpzfwwrlhlpfvebtow.supabase.co';
+const SKY_SUPABASE_KEY = 'sb_publishable_sT-VqjYO5wXZm4u3VCvZ-Q_zaDOVyuW';
+const skySupabase = createClient(SKY_SUPABASE_URL, SKY_SUPABASE_KEY);
+let skyCloudUser = null;
+let skyCloudBusy = false;
+
+const accountPanel = document.querySelector('#accountPanel');
+const accountMessage = document.querySelector('#accountMessage');
+const accountRecoveryField = document.querySelector('#recoveryField');
+function accountSay(message){ accountMessage.textContent = message; }
+function openAccount(){ accountPanel.classList.add('open'); accountPanel.setAttribute('aria-hidden','false'); accountSay(''); }
+function closeAccount(){ accountPanel.classList.remove('open'); accountPanel.setAttribute('aria-hidden','true'); }
+document.querySelector('#accountButton').addEventListener('click',openAccount);
+document.querySelector('#closeAccount').addEventListener('click',closeAccount);
+function accountInputs(){return {username:document.querySelector('#accountUsername').value.trim(),pin:document.querySelector('#accountPin').value.trim()};}
+async function skyAuth(action, extra={}){
+  const {username,pin}=accountInputs();
+  const {data,error}=await skySupabase.functions.invoke('skybound-auth',{body:{action,username,pin,...extra}});
+  if(error) throw new Error(data?.error || error.message || 'Account request failed.');
+  if(data?.error) throw new Error(data.error);
+  return data;
+}
+function applyCloudProfile(profile){
+  if(!profile) return;
+  xpTotal=Number(profile.xp)||0;
+  localStorage.setItem('skyboundXP',String(xpTotal));
+  const custom=profile.customization||{};
+  if(Number.isFinite(Number(custom.shirt))) shirtStyle=Number(custom.shirt);
+  if(Number.isFinite(Number(custom.pants))) pantsStyle=Number(custom.pants);
+  if(Number.isFinite(Number(custom.hat))) hatStyle=Number(custom.hat);
+  const name=document.querySelector('#profileName'); if(name) name.value=profile.username||'Sky Racer';
+  localStorage.setItem('skyboundProfile',JSON.stringify({name:profile.username||'Sky Racer',xp:xpTotal,shirt:shirtStyle,pants:pantsStyle,hat:hatStyle}));
+  localStorage.setItem('skyboundShirt',String(shirtStyle));localStorage.setItem('skyboundPants',String(pantsStyle));localStorage.setItem('skyboundHat',String(hatStyle));
+  refreshProfileStrip(); if(typeof refreshProgressionUI==='function') refreshProgressionUI();
+}
+async function saveCloudProfile(){
+  if(!skyCloudUser || skyCloudBusy) return;
+  skyCloudBusy=true;
+  try{
+    const {error}=await skySupabase.from('player_profiles').update({xp:xpTotal,level:Math.floor(xpTotal/100)+1,customization:{shirt:shirtStyle,pants:pantsStyle,hat:hatStyle}}).eq('id',skyCloudUser.id);
+    if(error) throw error;
+    const status=document.querySelector('#saveStatus'); if(status) status.textContent='SAVED TO CLOUD';
+  }catch(e){console.error('Cloud save failed',e);const status=document.querySelector('#saveStatus');if(status)status.textContent='CLOUD SAVE FAILED';}
+  finally{skyCloudBusy=false;}
+}
+async function finishAccountSession(result){
+  if(!result.session) throw new Error('No login session was returned.');
+  const {error}=await skySupabase.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
+  if(error) throw error;
+  skyCloudUser=result.session.user;
+  applyCloudProfile(result.profile);
+  closeAccount();
+  const status=document.querySelector('#saveStatus');if(status)status.textContent='CLOUD ACCOUNT CONNECTED';
+}
+document.querySelector('#registerAccount').addEventListener('click',async()=>{
+  if(skyCloudBusy)return;skyCloudBusy=true;accountSay('Creating your account…');
+  try{const result=await skyAuth('register');await finishAccountSession(result);if(result.recoveryCode){alert('SAVE THIS RECOVERY CODE SOMEWHERE SAFE. It is shown only once:\n\n'+result.recoveryCode);accountSay('Account created! Save your recovery code.');}}
+  catch(e){accountSay(e.message);}finally{skyCloudBusy=false;}
+});
+document.querySelector('#loginAccount').addEventListener('click',async()=>{
+  if(skyCloudBusy)return;skyCloudBusy=true;accountSay('Signing in…');
+  try{const result=await skyAuth('login');await finishAccountSession(result);accountSay('Signed in. Cloud saves are on.');}
+  catch(e){accountSay(e.message);}finally{skyCloudBusy=false;}
+});
+document.querySelector('#recoverAccount').addEventListener('click',async()=>{
+  if(accountRecoveryField.classList.contains('hidden')){accountRecoveryField.classList.remove('hidden');accountSay('Enter your recovery code and a new 6-digit PIN, then press Recover PIN again.');return;}
+  if(skyCloudBusy)return;skyCloudBusy=true;accountSay('Recovering account…');
+  try{const newPin=document.querySelector('#newAccountPin').value.trim();const recoveryCode=document.querySelector('#accountRecovery').value.trim();const result=await skyAuth('recover',{newPin,recoveryCode});await finishAccountSession(result);if(result.recoveryCode)alert('SAVE YOUR NEW RECOVERY CODE. Your old one no longer works:\n\n'+result.recoveryCode);}
+  catch(e){accountSay(e.message);}finally{skyCloudBusy=false;}
+});
+skySupabase.auth.getSession().then(async({data})=>{
+  if(data.session){skyCloudUser=data.session.user;const {data:profile}=await skySupabase.from('player_profiles').select('username,xp,coins,level,unlocked_characters,customization,stats').eq('id',skyCloudUser.id).single();if(profile){applyCloudProfile(profile);const status=document.querySelector('#saveStatus');if(status)status.textContent='CLOUD ACCOUNT CONNECTED';}}
+});
 
 const root = document.querySelector('#game');
 const scene = new THREE.Scene();
@@ -1324,7 +1402,7 @@ function toast(message) {
 
 function saveSkyProfile(){
   const profile={name:(document.querySelector('#profileName')?.value||'Sky Racer').trim().slice(0,18)||'Sky Racer',xp:xpTotal,shirt:shirtStyle,pants:pantsStyle,hat:hatStyle,updatedAt:new Date().toISOString()};
-  try{localStorage.setItem('skyboundProfile',JSON.stringify(profile));localStorage.setItem('skyboundXP',String(xpTotal));refreshProfileStrip();const s=document.querySelector('#saveStatus');if(s)s.textContent='SAVED ON THIS DEVICE';}
+  try{localStorage.setItem('skyboundProfile',JSON.stringify(profile));localStorage.setItem('skyboundXP',String(xpTotal));refreshProfileStrip();const s=document.querySelector('#saveStatus');if(s)s.textContent=skyCloudUser?'SYNCING TO CLOUD':'SAVED ON THIS DEVICE';if(skyCloudUser)saveCloudProfile();}
   catch(e){const s=document.querySelector('#saveStatus');if(s)s.textContent='SAVE UNAVAILABLE';}
 }
 function refreshProfileStrip(){const l=document.querySelector('#profileLevel'),x=document.querySelector('#profileXP');if(l)l.textContent=Math.floor(xpTotal/100)+1;if(x)x.textContent=xpTotal;}
